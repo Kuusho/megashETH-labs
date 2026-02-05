@@ -7,9 +7,10 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { Heatmap } from "@/components/heatmap";
 import { AddressSearch } from "@/components/AddressSearch";
 import { useTransactionHistory } from "@/hooks/useTransactionHistory";
-import { cn, calculateStreak } from "@/lib/utils";
+import { cn, calculateStreak, formatAddress } from "@/lib/utils";
 import { ACTIVE_CHAIN } from "@/lib/chains";
 import type { ResolvedUser } from "@/lib/neynar";
+import { Check, Copy, Image as ImageIcon } from "lucide-react";
 
 // Demo data generator (fallback when not connected or no data)
 function generateDemoData(seed: string = "default"): Map<string, number> {
@@ -54,6 +55,7 @@ export default function HeatmapPage() {
   // Comparison state
   const [compareUserA, setCompareUserA] = useState<{ address: string; user?: ResolvedUser } | null>(null);
   const [compareUserB, setCompareUserB] = useState<{ address: string; user?: ResolvedUser } | null>(null);
+  const [shareState, setShareState] = useState<"idle" | "copied" | "image-copied">("idle");
 
   // Determine active address based on mode
   const activeAddress = lookupMode === "lookup" ? lookupAddress : connectedAddress;
@@ -116,6 +118,74 @@ export default function HeatmapPage() {
   const handleCompareB = useCallback((address: string, user?: ResolvedUser) => {
     setCompareUserB({ address, user });
   }, []);
+
+  // Build OG image URL for comparison
+  const buildOgUrl = useCallback(() => {
+    if (!compareUserA || !compareUserB) return null;
+
+    const winsA = [
+      compareStatsA.totalTransactions > compareStatsB.totalTransactions,
+      compareStatsA.currentStreak > compareStatsB.currentStreak,
+      compareStatsA.longestStreak > compareStatsB.longestStreak,
+      compareStatsA.activeDays > compareStatsB.activeDays,
+    ].filter(Boolean).length;
+
+    const winsB = [
+      compareStatsB.totalTransactions > compareStatsA.totalTransactions,
+      compareStatsB.currentStreak > compareStatsA.currentStreak,
+      compareStatsB.longestStreak > compareStatsA.longestStreak,
+      compareStatsB.activeDays > compareStatsA.activeDays,
+    ].filter(Boolean).length;
+
+    const params = new URLSearchParams({
+      userA: compareUserA.user?.username || formatAddress(compareUserA.address),
+      userB: compareUserB.user?.username || formatAddress(compareUserB.address),
+      winsA: winsA.toString(),
+      winsB: winsB.toString(),
+      streakA: compareStatsA.currentStreak.toString(),
+      streakB: compareStatsB.currentStreak.toString(),
+      txA: compareStatsA.totalTransactions.toString(),
+      txB: compareStatsB.totalTransactions.toString(),
+    });
+    return `/api/og?${params.toString()}`;
+  }, [compareUserA, compareUserB, compareStatsA, compareStatsB]);
+
+  // Copy URL to clipboard
+  const handleShareUrl = async () => {
+    const ogPath = buildOgUrl();
+    if (!ogPath) return;
+
+    const ogUrl = `${window.location.origin}${ogPath}`;
+    try {
+      await navigator.clipboard.writeText(ogUrl);
+      setShareState("copied");
+      setTimeout(() => setShareState("idle"), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
+
+  // Copy image directly to clipboard
+  const handleShareImage = async () => {
+    const ogPath = buildOgUrl();
+    if (!ogPath) return;
+
+    try {
+      const response = await fetch(ogPath);
+      const blob = await response.blob();
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob,
+        }),
+      ]);
+      setShareState("image-copied");
+      setTimeout(() => setShareState("idle"), 2000);
+    } catch (err) {
+      console.error("Failed to copy image:", err);
+      handleShareUrl();
+    }
+  };
 
   // Get display name for header
   const getDisplayName = () => {
@@ -493,6 +563,42 @@ export default function HeatmapPage() {
                     valueA={compareStatsA.activeDays}
                     valueB={compareStatsB.activeDays}
                   />
+
+                  {/* Share buttons */}
+                  <div className="flex justify-center gap-3 pt-6 border-t" style={{ borderColor: '#292526' }}>
+                    <button
+                      onClick={handleShareImage}
+                      className="btn-primary flex items-center gap-2"
+                    >
+                      {shareState === "image-copied" ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Image Copied!
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon className="w-4 h-4" />
+                          Copy as Image
+                        </>
+                      )}
+                    </button>
+                    <button
+                      onClick={handleShareUrl}
+                      className="btn-secondary flex items-center gap-2"
+                    >
+                      {shareState === "copied" ? (
+                        <>
+                          <Check className="w-4 h-4" />
+                          Link Copied!
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          Copy Link
+                        </>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
             </>

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heatmap } from "./Heatmap";
 import { cn, formatAddress, calculateStreak } from "@/lib/utils";
-import { Trophy, Flame, TrendingUp, Calendar, Swords } from "lucide-react";
+import { Trophy, Flame, TrendingUp, Calendar, Swords, Share2, Check, Copy, Image as ImageIcon } from "lucide-react";
 
 interface User {
   address: string;
@@ -32,6 +33,8 @@ export function HeatmapComparison({
   userB,
   colorScheme = "green",
 }: HeatmapComparisonProps) {
+  const [shareState, setShareState] = useState<"idle" | "copied" | "image-copied">("idle");
+
   // Calculate stats for both users
   const statsA = calculateUserStats(userA.data);
   const statsB = calculateUserStats(userB.data);
@@ -73,6 +76,54 @@ export function HeatmapComparison({
   // Count wins
   const winsA = metrics.filter((m) => m.winner === "a").length;
   const winsB = metrics.filter((m) => m.winner === "b").length;
+
+  // Build OG image URL
+  const buildOgUrl = () => {
+    const params = new URLSearchParams({
+      userA: userA.username || formatAddress(userA.address),
+      userB: userB.username || formatAddress(userB.address),
+      winsA: winsA.toString(),
+      winsB: winsB.toString(),
+      streakA: statsA.currentStreak.toString(),
+      streakB: statsB.currentStreak.toString(),
+      txA: statsA.totalTxs.toString(),
+      txB: statsB.totalTxs.toString(),
+    });
+    return `/api/og?${params.toString()}`;
+  };
+
+  // Copy URL to clipboard
+  const handleShareUrl = async () => {
+    const ogUrl = `${window.location.origin}${buildOgUrl()}`;
+    try {
+      await navigator.clipboard.writeText(ogUrl);
+      setShareState("copied");
+      setTimeout(() => setShareState("idle"), 2000);
+    } catch (err) {
+      console.error("Failed to copy URL:", err);
+    }
+  };
+
+  // Copy image directly to clipboard (for easy pasting into Twitter/Warpcast)
+  const handleShareImage = async () => {
+    try {
+      const ogUrl = buildOgUrl();
+      const response = await fetch(ogUrl);
+      const blob = await response.blob();
+
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          [blob.type]: blob,
+        }),
+      ]);
+      setShareState("image-copied");
+      setTimeout(() => setShareState("idle"), 2000);
+    } catch (err) {
+      console.error("Failed to copy image:", err);
+      // Fallback to URL copy
+      handleShareUrl();
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -186,12 +237,44 @@ export function HeatmapComparison({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
-        className="flex justify-center gap-4"
+        className="flex flex-col items-center gap-4"
       >
-        <button className="btn-primary">
-          Share Comparison
-        </button>
-        <button className="btn-secondary">
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={handleShareImage}
+            className="btn-primary flex items-center gap-2"
+          >
+            {shareState === "image-copied" ? (
+              <>
+                <Check className="w-4 h-4" />
+                Image Copied!
+              </>
+            ) : (
+              <>
+                <ImageIcon className="w-4 h-4" />
+                Copy as Image
+              </>
+            )}
+          </button>
+          <button
+            onClick={handleShareUrl}
+            className="btn-secondary flex items-center gap-2"
+          >
+            {shareState === "copied" ? (
+              <>
+                <Check className="w-4 h-4" />
+                Link Copied!
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4" />
+                Copy Link
+              </>
+            )}
+          </button>
+        </div>
+        <button className="btn-ghost flex items-center gap-2">
+          <Swords className="w-4 h-4" />
           Challenge {userB.username || formatAddress(userB.address, 3)}
         </button>
       </motion.div>
