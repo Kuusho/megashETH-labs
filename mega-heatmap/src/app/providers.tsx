@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { WagmiProvider, createConfig, http } from "wagmi";
 import { mainnet, base, arbitrum, optimism } from "wagmi/chains";
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useState, useEffect } from "react";
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { LeaderboardProvider } from "@/lib/leaderboard";
@@ -47,6 +47,7 @@ const config = getDefaultConfig({
 });
 
 export function Providers({ children }: { children: ReactNode }) {
+  const [mounted, setMounted] = useState(false);
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -59,13 +60,24 @@ export function Providers({ children }: { children: ReactNode }) {
       })
   );
 
+  // Prevent SSR/prerendering issues with localStorage
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // During SSR/prerender, return null to prevent wallet provider issues
+  // This causes a flash but prevents build errors
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider
           modalSize="compact"
           appInfo={{
-            appName: "megaSHETH Labs",
+            appName: "Bunny Intel",
             learnMoreUrl: "https://megaeth.com",
           }}
         >

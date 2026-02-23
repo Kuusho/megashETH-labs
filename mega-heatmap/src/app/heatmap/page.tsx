@@ -11,6 +11,7 @@ import { cn, calculateStreak, formatAddress } from "@/lib/utils";
 import { ACTIVE_CHAIN } from "@/lib/chains";
 import type { ResolvedUser } from "@/lib/neynar";
 import { Check, Copy, Image as ImageIcon } from "lucide-react";
+import { UserProfile } from "@/components/profile";
 
 // Demo data generator (fallback when not connected or no data)
 function generateDemoData(seed: string = "default"): Map<string, number> {
@@ -36,16 +37,18 @@ function generateDemoData(seed: string = "default"): Map<string, number> {
 }
 
 const COLOR_SCHEMES = [
-  { id: "fire", name: "Fire", color: "#eb4511" },
-  { id: "green", name: "Forest", color: "#39D353" },
-  { id: "ocean", name: "Ocean", color: "#54AEFF" },
+  { id: "rainbow", name: "Rainbow", color: "#ff85d4", emoji: "🌈" },
+  { id: "fire", name: "Fire", color: "#eb4511", emoji: "🔥" },
+  { id: "carrot", name: "Carrot", color: "#ff6b35", emoji: "🥕" },
+  { id: "ocean", name: "Ocean", color: "#54AEFF", emoji: "🌊" },
+  { id: "forest", name: "Forest", color: "#39D353", emoji: "🌲" },
 ] as const;
 
 type LookupMode = "connect" | "lookup";
 
 export default function HeatmapPage() {
   const { address: connectedAddress, isConnected } = useAccount();
-  const [colorScheme, setColorScheme] = useState<"green" | "fire" | "ocean">("fire");
+  const [colorScheme, setColorScheme] = useState<"fire" | "rainbow" | "carrot" | "ocean" | "forest">("rainbow");
   const [lookupMode, setLookupMode] = useState<LookupMode>("connect");
 
   // Lookup state
@@ -364,26 +367,29 @@ export default function HeatmapPage() {
             </div>
 
             {/* Color scheme picker */}
-            <div className="flex items-center gap-1 p-1 rounded-sm" style={{ backgroundColor: '#111011' }}>
-              {COLOR_SCHEMES.map((scheme) => (
-                <button
-                  key={scheme.id}
-                  onClick={() => setColorScheme(scheme.id)}
-                  className={cn(
-                    "p-2 rounded-sm transition-all",
-                    colorScheme === scheme.id && "ring-1 ring-offset-1"
-                  )}
-                  style={{
-                    backgroundColor: colorScheme === scheme.id ? '#1a1617' : 'transparent',
-                  }}
-                  title={scheme.name}
-                >
-                  <div
-                    className="w-4 h-4 rounded-[2px]"
-                    style={{ backgroundColor: scheme.color }}
-                  />
-                </button>
-              ))}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold" style={{ color: '#878283' }}>palette:</span>
+              <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: '#111011' }}>
+                {COLOR_SCHEMES.map((scheme) => (
+                  <button
+                    key={scheme.id}
+                    onClick={() => setColorScheme(scheme.id)}
+                    className={cn(
+                      "px-3 py-2 rounded-lg transition-all flex items-center gap-2",
+                      colorScheme === scheme.id && "ring-2"
+                    )}
+                    style={{
+                      backgroundColor: colorScheme === scheme.id ? 'rgba(255, 107, 53, 0.1)' : 'transparent',
+                      borderColor: colorScheme === scheme.id ? scheme.color : 'transparent',
+                      color: colorScheme === scheme.id ? scheme.color : '#878283',
+                    }}
+                    title={scheme.name}
+                  >
+                    <span className="text-sm">{scheme.emoji}</span>
+                    <span className="text-xs font-semibold hidden sm:inline">{scheme.name}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -397,6 +403,18 @@ export default function HeatmapPage() {
             )}
           </div>
         </motion.div>
+
+        {/* User Profile & Points Section */}
+        {isConnected && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="mb-8"
+          >
+            <UserProfile />
+          </motion.div>
+        )}
 
         {/* Comparison Section */}
         <motion.div

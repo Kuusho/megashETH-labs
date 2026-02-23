@@ -8,9 +8,90 @@ const config: Config = {
   ],
   theme: {
     extend: {
-      // megaSHETH Color Palette
+      // BUNNY INTEL Color Palette
       colors: {
-        // Primary palette
+        // Bunny brand colors
+        bunny: {
+          pink: {
+            DEFAULT: "#ff85d4",
+            50: "#fff0f9",
+            100: "#ffe0f3",
+            200: "#ffc2e8",
+            300: "#ff85d4",
+            400: "#ff57c0",
+            500: "#ff2aac",
+            600: "#e6008f",
+            700: "#b30070",
+            800: "#800051",
+            900: "#4d0030",
+          },
+          blue: {
+            DEFAULT: "#4ecdc4",
+            50: "#e6fffe",
+            100: "#ccfffc",
+            200: "#99fff9",
+            300: "#66fff6",
+            400: "#4ecdc4",
+            500: "#33b3aa",
+            600: "#268a83",
+            700: "#1a615c",
+            800: "#0d3935",
+            900: "#00100e",
+          },
+          purple: {
+            DEFAULT: "#a770ff",
+            50: "#f4edff",
+            100: "#e9dbff",
+            200: "#d3b7ff",
+            300: "#bd93ff",
+            400: "#a770ff",
+            500: "#8f4dff",
+            600: "#7030e6",
+            700: "#5420b3",
+            800: "#381080",
+            900: "#1c004d",
+          },
+          yellow: {
+            DEFAULT: "#ffe66d",
+            50: "#fffef0",
+            100: "#fffce0",
+            200: "#fff9c2",
+            300: "#fff3a3",
+            400: "#ffe66d",
+            500: "#ffd633",
+            600: "#e6c100",
+            700: "#b39600",
+            800: "#806b00",
+            900: "#4d4000",
+          },
+          green: {
+            DEFAULT: "#06ffa5",
+            50: "#e6fff7",
+            100: "#ccffef",
+            200: "#99ffdf",
+            300: "#66ffcf",
+            400: "#06ffa5",
+            500: "#00e68a",
+            600: "#00b36b",
+            700: "#00804d",
+            800: "#004d2e",
+            900: "#001a10",
+          },
+        },
+        carrot: {
+          DEFAULT: "#ff6b35",
+          50: "#fff4ed",
+          100: "#ffe8d5",
+          200: "#ffcbaa",
+          300: "#ffb085",
+          400: "#ff9060",
+          500: "#ff6b35",
+          600: "#e64d1a",
+          700: "#b33b14",
+          800: "#80290e",
+          900: "#4d1808",
+        },
+        // Keep megaeth colors for data integrity
         mega: {
           // Molten Orange - Primary accent
           orange: {

@@ -16,7 +16,7 @@ interface User {
 interface HeatmapComparisonProps {
   userA: User;
   userB: User;
-  colorScheme?: "green" | "fire" | "ocean";
+  colorScheme?: "fire" | "rainbow" | "carrot" | "ocean" | "forest";
 }
 
 interface ComparisonMetric {
@@ -31,7 +31,7 @@ interface ComparisonMetric {
 export function HeatmapComparison({
   userA,
   userB,
-  colorScheme = "green",
+  colorScheme = "rainbow",
 }: HeatmapComparisonProps) {
   const [shareState, setShareState] = useState<"idle" | "copied" | "image-copied">("idle");
 

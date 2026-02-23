@@ -10,19 +10,12 @@ import { HeatmapLegend } from "./HeatmapLegend";
 interface HeatmapProps {
   data: Map<string, number>;
   year?: number;
-  colorScheme?: "green" | "fire" | "ocean";
+  colorScheme?: "fire" | "rainbow" | "carrot" | "ocean" | "forest";
   showLabels?: boolean;
   onDayClick?: (date: string, count: number) => void;
 }
 
 const COLOR_SCHEMES = {
-  green: {
-    0: "#1a1617",
-    1: "#0E4429",
-    2: "#006D32",
-    3: "#26A641",
-    4: "#39D353",
-  },
   fire: {
     0: "#1a1617",
     1: "#4a1a0a",
@@ -30,12 +23,33 @@ const COLOR_SCHEMES = {
     3: "#d43d0f",
     4: "#eb4511",
   },
+  rainbow: {
+    0: "#1a1617",
+    1: "#ff85d4",
+    2: "#a770ff",
+    3: "#4ecdc4",
+    4: "#ffe66d",
+  },
+  carrot: {
+    0: "#1a1617",
+    1: "#ffb085",
+    2: "#ff9060",
+    3: "#ff7040",
+    4: "#ff6b35",
+  },
   ocean: {
     0: "#1a1617",
     1: "#0A3069",
     2: "#0969DA",
     3: "#54AEFF",
     4: "#80CCFF",
+  },
+  forest: {
+    0: "#1a1617",
+    1: "#0E4429",
+    2: "#006D32",
+    3: "#26A641",
+    4: "#39D353",
   },
 };
 
@@ -49,7 +63,7 @@ const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 export function Heatmap({
   data,
-  colorScheme = "fire",
+  colorScheme = "rainbow",
   showLabels = true,
   onDayClick,
 }: HeatmapProps) {
