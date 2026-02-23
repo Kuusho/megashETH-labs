@@ -341,3 +341,77 @@ Phase 3:
 
 **Last Updated:** 2026-02-22 21:45 GMT+1
 **Sprint Status:** 90min elapsed, core MVP complete ✅
+
+---
+
+---
+
+## Session: Dark Quant Terminal Redesign
+
+**Date:** 2026-02-23
+**Model:** Gemini (external)
+**Goal:** Aesthetic and design overhaul — replace Bunny Intel's playful rainbow palette with a structured dark terminal theme
+
+---
+
+### Design Changes
+
+**Palette replaced:**
+
+| Old | New | Role |
+|-----|-----|------|
+| bunny-pink, carrot-* rainbow scales | `#3b252c` bg / `#2d1b22` surface | Surfaces |
+| bright multi-color gradients | `rgba(174,164,191,0.15)` border | Structural dividers |
+| various neons | `#f5f8de` text / `#aea4bf` muted / `#8f6593` dim | Text hierarchy |
+| orange/pink CTA | `#84e296` accent | CTA, active states |
+
+**Typography:**
+- Migrated from system font stack to `next/font/google` (Space Grotesk + Space Mono)
+- `--font-sans` → Space Grotesk (headings, UI)
+- `--font-mono` → Space Mono (addresses, data, code)
+
+**Component changes:**
+- `tailwind.config.ts` — replaced all bunny/carrot tokens with new palette, added violet heatmap ramp
+- `globals.css` — rewrote all CSS custom properties, removed shimmer/rainbow/wiggle keyframes, added `.glass-card` alias for `.card`, added `.bg-grid` texture utility
+- `layout.tsx` — added `Space_Grotesk` + `Space_Mono` via `next/font/google`, removed three fixed blur orb divs
+- `Header.tsx` — replaced emoji nav labels with Lucide icons (Flame, LayoutDashboard, Trophy, Rocket), removed rainbow gradient stripe and carrot wiggle animation
+- `Footer.tsx` — full rewrite with dark theme and correct Bunny Intel branding
+- `page.tsx` — removed background blur orbs, replaced stat emoji with "Live" text, removed infinite rotation on CTA
+- `AddressSearch.tsx` — visible default border, error color updated to `#ff7b7b`
+- `Leaderboard.tsx` — replaced glass-card with `.card`, removed 🥖 from Score header, replaced medal emoji with color-coded rank badges
+- `EcosystemStats.tsx`, `HeatmapComparison.tsx`, `UserProfile.tsx`, `ProjectCard.tsx` — all migrated to new dark palette
+- `Heatmap.tsx` — added violet color scheme as default, replacing rainbow default
+
+---
+
+## Session: Debug — Stale .next Cache
+
+**Date:** 2026-02-23
+**Model:** Claude Sonnet 4.6
+
+**Symptom:** App loaded with 200 but all static JS/CSS chunks returned 404:
+```
+GET /_next/static/chunks/app/page.js 404
+GET /_next/static/css/app/layout.css 404
+```
+
+**Root cause:** The `next/font/google` migration in `layout.tsx` changed webpack's module graph significantly enough that all previously cached chunk hashes in `.next/server/` became stale. The dev server had been running against the old cache since before the redesign.
+
+**Fix:**
+```bash
+rm -rf .next
+npm run dev   # cold rebuild from scratch
+```
+
+No source code changes required — all redesign files were valid.
+
+**Verification:** TypeScript clean (`npx tsc --noEmit` — only pre-existing errors in `snapshot/` scripts, unrelated to app).
+
+**Dev environment:**
+- Local: `http://localhost:3000`
+- Public: `https://travelable-ruinously-basilia.ngrok-free.dev` (ngrok free tier)
+
+---
+
+**Last Updated:** 2026-02-23
+**Current Status:** Dark Quant Terminal design live, dev environment running ✅

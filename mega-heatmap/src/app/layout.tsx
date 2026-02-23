@@ -1,7 +1,22 @@
 import type { Metadata, Viewport } from "next";
+import { Space_Grotesk, Space_Mono } from "next/font/google";
 import "@/styles/globals.css";
 import { Providers } from "./providers";
 import { HeaderWrapper } from "@/components/layout/HeaderWrapper";
+import { Footer } from "@/components/layout/Footer";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-sans",
+  display: "swap",
+});
+
+const spaceMono = Space_Mono({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-mono",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -9,18 +24,18 @@ export const metadata: Metadata = {
     template: "%s | Bunny Intel",
   },
   description:
-    "onchain intel for the real-time blockchain. track activity, discover alpha, compete on leaderboards. bunny speed gud. 🐰🥕",
-  keywords: ["megaeth", "blockchain", "analytics", "heatmap", "onchain", "web3", "bunny intel"],
+    "Onchain analytics for the real-time blockchain. Track activity, discover alpha, compete on leaderboards.",
+  keywords: ["megaeth", "blockchain", "analytics", "heatmap", "onchain", "web3"],
   authors: [{ name: "Pan", url: "https://twitter.com/korewapandesu" }],
   openGraph: {
     title: "Bunny Intel | MegaETH Onchain Analytics",
-    description: "onchain intel for the real-time blockchain 🐰🥕",
+    description: "Onchain analytics for the real-time blockchain.",
     type: "website",
   },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0a0909",
+  themeColor: "#3b252c",
   width: "device-width",
   initialScale: 1,
 };
@@ -31,39 +46,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <head>
-        {/* Fonts - placeholder until you find sexier ones */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen antialiased font-sans" style={{ backgroundColor: '#0a0909' }}>
+    <html
+      lang="en"
+      className={`dark ${spaceGrotesk.variable} ${spaceMono.variable}`}
+    >
+      <body
+        className="min-h-screen antialiased font-sans"
+        style={{ backgroundColor: "#3b252c" }}
+      >
         <Providers>
-          {/* Dots background (bunny style) */}
-          <div className="fixed inset-0 bg-dots pointer-events-none opacity-30" />
-
-          {/* Gradient orbs - rainbow theme */}
-          <div
-            className="fixed top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] pointer-events-none"
-            style={{ backgroundColor: 'rgba(255, 107, 53, 0.08)' }}
-          />
-          <div
-            className="fixed bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-[120px] pointer-events-none"
-            style={{ backgroundColor: 'rgba(255, 133, 212, 0.06)' }}
-          />
-          <div
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[100px] pointer-events-none"
-            style={{ backgroundColor: 'rgba(78, 205, 196, 0.04)' }}
-          />
+          {/* Subtle grid texture */}
+          <div className="fixed inset-0 bg-grid pointer-events-none" />
 
           {/* Main app */}
           <div className="relative flex min-h-screen flex-col">
             <HeaderWrapper />
             <main className="flex-1">{children}</main>
+            <Footer />
           </div>
         </Providers>
       </body>

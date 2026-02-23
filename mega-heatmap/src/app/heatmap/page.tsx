@@ -37,18 +37,17 @@ function generateDemoData(seed: string = "default"): Map<string, number> {
 }
 
 const COLOR_SCHEMES = [
-  { id: "rainbow", name: "Rainbow", color: "#ff85d4", emoji: "🌈" },
-  { id: "fire", name: "Fire", color: "#eb4511", emoji: "🔥" },
-  { id: "carrot", name: "Carrot", color: "#ff6b35", emoji: "🥕" },
-  { id: "ocean", name: "Ocean", color: "#54AEFF", emoji: "🌊" },
-  { id: "forest", name: "Forest", color: "#39D353", emoji: "🌲" },
+  { id: "violet", name: "Violet", color: "#84e296" },
+  { id: "fire", name: "Fire", color: "#eb4511" },
+  { id: "ocean", name: "Ocean", color: "#54AEFF" },
+  { id: "forest", name: "Forest", color: "#39D353" },
 ] as const;
 
 type LookupMode = "connect" | "lookup";
 
 export default function HeatmapPage() {
   const { address: connectedAddress, isConnected } = useAccount();
-  const [colorScheme, setColorScheme] = useState<"fire" | "rainbow" | "carrot" | "ocean" | "forest">("rainbow");
+  const [colorScheme, setColorScheme] = useState<"violet" | "fire" | "ocean" | "forest">("violet");
   const [lookupMode, setLookupMode] = useState<LookupMode>("connect");
 
   // Lookup state
@@ -368,25 +367,23 @@ export default function HeatmapPage() {
 
             {/* Color scheme picker */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold" style={{ color: '#878283' }}>palette:</span>
-              <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: '#111011' }}>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8f6593' }}>palette</span>
+              <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: 'rgba(174,164,191,0.06)', border: '1px solid rgba(174,164,191,0.12)' }}>
                 {COLOR_SCHEMES.map((scheme) => (
                   <button
                     key={scheme.id}
                     onClick={() => setColorScheme(scheme.id)}
                     className={cn(
-                      "px-3 py-2 rounded-lg transition-all flex items-center gap-2",
-                      colorScheme === scheme.id && "ring-2"
+                      "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
                     )}
                     style={{
-                      backgroundColor: colorScheme === scheme.id ? 'rgba(255, 107, 53, 0.1)' : 'transparent',
-                      borderColor: colorScheme === scheme.id ? scheme.color : 'transparent',
-                      color: colorScheme === scheme.id ? scheme.color : '#878283',
+                      backgroundColor: colorScheme === scheme.id ? `${scheme.color}18` : 'transparent',
+                      color: colorScheme === scheme.id ? scheme.color : '#8f6593',
+                      border: colorScheme === scheme.id ? `1px solid ${scheme.color}40` : '1px solid transparent',
                     }}
                     title={scheme.name}
                   >
-                    <span className="text-sm">{scheme.emoji}</span>
-                    <span className="text-xs font-semibold hidden sm:inline">{scheme.name}</span>
+                    {scheme.name}
                   </button>
                 ))}
               </div>

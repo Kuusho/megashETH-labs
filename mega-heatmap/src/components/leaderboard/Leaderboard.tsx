@@ -1,9 +1,3 @@
-/**
- * Leaderboard Component
- * 
- * Displays top users by MegaETH Native Score with pagination.
- */
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -11,7 +5,7 @@ import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
 import { RefreshCw, Trophy, ChevronLeft, ChevronRight } from 'lucide-react';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface LeaderboardEntry {
   rank: number;
@@ -31,7 +25,13 @@ interface LeaderboardData {
   updated_at: string;
 }
 
-// ─── Component ───────────────────────────────────────────────────────────────
+const RANK_COLORS: Record<number, string> = {
+  1: '#e8c37a', // gold
+  2: '#aea4bf', // silver (Lilac Ash)
+  3: '#b8825e', // bronze
+};
+
+// ─── Component ────────────────────────────────────────────────────────────────
 
 export function Leaderboard() {
   const { address: currentAddress } = useAccount();
@@ -42,14 +42,11 @@ export function Leaderboard() {
 
   const fetchLeaderboard = async (offset: number = 0) => {
     setLoading(true);
-    
     try {
       const response = await fetch(
         `/api/leaderboard?limit=${ITEMS_PER_PAGE}&offset=${offset}`
       );
-      
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
-      
       const leaderboardData = await response.json();
       setData(leaderboardData);
     } catch (err) {
@@ -63,22 +60,18 @@ export function Leaderboard() {
     fetchLeaderboard(page * ITEMS_PER_PAGE);
   }, [page]);
 
-  const handlePrevPage = () => {
-    if (page > 0) setPage(p => p - 1);
-  };
-
+  const handlePrevPage = () => { if (page > 0) setPage(p => p - 1); };
   const handleNextPage = () => {
-    if (data && page < Math.floor(data.total_users / ITEMS_PER_PAGE)) {
+    if (data && page < Math.floor(data.total_users / ITEMS_PER_PAGE))
       setPage(p => p + 1);
-    }
   };
 
   if (loading && !data) {
     return (
-      <div className="glass-card p-8">
-        <div className="flex items-center justify-center space-x-3">
-          <RefreshCw className="w-5 h-5 animate-spin text-mega-green" />
-          <p className="text-mega-gray-600">Loading leaderboard...</p>
+      <div className="card p-8">
+        <div className="flex items-center justify-center gap-3">
+          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#84e296' }} />
+          <p className="text-sm" style={{ color: '#aea4bf' }}>Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -88,103 +81,114 @@ export function Leaderboard() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="glass-card p-8"
+      className="card"
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <Trophy className="w-6 h-6 text-mega-green" />
-          <h2 className="text-2xl font-bold text-mega-gray-900">
-            MegaETH Native Leaderboard
+      <div
+        className="flex items-center justify-between px-6 py-4 border-b"
+        style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
+      >
+        <div className="flex items-center gap-2.5">
+          <Trophy className="w-4 h-4" style={{ color: '#84e296' }} />
+          <h2 className="text-lg font-bold" style={{ color: '#f5f8de' }}>
+            MegaETH Leaderboard
           </h2>
         </div>
         <button
           onClick={() => fetchLeaderboard(page * ITEMS_PER_PAGE)}
-          className="p-2 hover:bg-mega-gray-100 rounded-lg transition-colors"
+          className="p-1.5 rounded-md transition-colors hover:bg-[rgba(174,164,191,0.08)]"
           title="Refresh"
         >
-          <RefreshCw className="w-5 h-5 text-mega-gray-400" />
+          <RefreshCw
+            className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
+            style={{ color: '#8f6593' }}
+          />
         </button>
       </div>
 
-      <p className="text-sm text-mega-gray-500 mb-6">
-        {data.total_users.toLocaleString()} total users • Updated daily at midnight UTC
+      <p className="px-6 py-3 text-xs font-mono border-b" style={{ color: '#8f6593', borderColor: 'rgba(174, 164, 191, 0.08)' }}>
+        {data.total_users.toLocaleString()} total users · Updated daily at midnight UTC
       </p>
 
       {/* Table */}
-      <div className="overflow-x-auto -mx-8 px-8">
+      <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-mega-gray-200">
-              <th className="text-left py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Rank
-              </th>
-              <th className="text-left py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Address
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Score 🥖
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Txs
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Days
-              </th>
-              <th className="text-right py-3 px-4 text-sm font-semibold text-mega-gray-600">
-                Contracts
-              </th>
+            <tr style={{ borderBottom: '1px solid rgba(174, 164, 191, 0.1)' }}>
+              {['Rank', 'Address', 'Score', 'Txs', 'Days', 'Contracts'].map((h, i) => (
+                <th
+                  key={h}
+                  className={`py-3 px-4 text-xs font-semibold uppercase tracking-wider ${i > 1 ? 'text-right' : 'text-left'}`}
+                  style={{ color: '#8f6593' }}
+                >
+                  {h}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
             {data.leaderboard.map((entry) => {
-              const isCurrentUser = currentAddress &&
+              const isCurrentUser =
+                currentAddress &&
                 entry.address.toLowerCase() === currentAddress.toLowerCase();
+              const rankColor = RANK_COLORS[entry.rank];
 
               return (
                 <motion.tr
                   key={entry.address}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className={`
-                    border-b border-mega-gray-100 transition-colors
-                    ${isCurrentUser ? 'bg-mega-green/10' : 'hover:bg-mega-gray-50'}
-                  `}
+                  style={{
+                    borderBottom: '1px solid rgba(174, 164, 191, 0.06)',
+                    backgroundColor: isCurrentUser
+                      ? 'rgba(132, 226, 150, 0.05)'
+                      : 'transparent',
+                  }}
+                  className="transition-colors hover:bg-[rgba(174,164,191,0.04)]"
                 >
-                  <td className="py-4 px-4">
-                    <div className="flex items-center space-x-2">
-                      {entry.rank <= 3 && (
-                        <span className="text-lg">
-                          {entry.rank === 1 ? '🥇' : entry.rank === 2 ? '🥈' : '🥉'}
+                  <td className="py-3.5 px-4">
+                    <span
+                      className="text-sm font-mono font-semibold"
+                      style={{ color: rankColor ?? '#aea4bf' }}
+                    >
+                      {entry.rank <= 3 ? '▲' : ''} #{entry.rank}
+                    </span>
+                  </td>
+                  <td className="py-3.5 px-4">
+                    <div className="flex items-center gap-2">
+                      <code
+                        className="text-xs font-mono"
+                        style={{ color: '#aea4bf' }}
+                      >
+                        {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
+                      </code>
+                      {isCurrentUser && (
+                        <span
+                          className="px-1.5 py-0.5 text-[10px] font-semibold rounded"
+                          style={{
+                            backgroundColor: 'rgba(132, 226, 150, 0.12)',
+                            color: '#84e296',
+                          }}
+                        >
+                          YOU
                         </span>
                       )}
-                      <span className="font-semibold text-mega-gray-900">
-                        #{entry.rank}
-                      </span>
                     </div>
                   </td>
-                  <td className="py-4 px-4">
-                    <code className="text-sm font-mono text-mega-gray-700">
-                      {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
-                    </code>
-                    {isCurrentUser && (
-                      <span className="ml-2 px-2 py-0.5 text-xs font-semibold text-mega-green bg-mega-green/10 rounded">
-                        YOU
-                      </span>
-                    )}
+                  <td className="py-3.5 px-4 text-right">
+                    <span className="text-sm font-mono font-semibold" style={{ color: '#f5f8de' }}>
+                      {entry.score.toLocaleString()}
+                    </span>
                   </td>
-                  <td className="py-4 px-4 text-right font-semibold text-mega-gray-900">
-                    {entry.score.toLocaleString()}
-                  </td>
-                  <td className="py-4 px-4 text-right text-mega-gray-600">
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
                     {entry.total_txs.toLocaleString()}
                   </td>
-                  <td className="py-4 px-4 text-right text-mega-gray-600">
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
                     {entry.days_active}
                   </td>
-                  <td className="py-4 px-4 text-right text-mega-gray-600">
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
                     {entry.contracts_deployed}
                   </td>
                 </motion.tr>
@@ -195,26 +199,31 @@ export function Leaderboard() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-6 pt-6 border-t border-mega-gray-200">
-        <div className="text-sm text-mega-gray-500">
-          Showing {page * ITEMS_PER_PAGE + 1} - {Math.min((page + 1) * ITEMS_PER_PAGE, data.total_users)} of {data.total_users.toLocaleString()}
+      <div
+        className="flex items-center justify-between px-6 py-4 border-t"
+        style={{ borderColor: 'rgba(174, 164, 191, 0.1)' }}
+      >
+        <div className="text-xs font-mono" style={{ color: '#8f6593' }}>
+          {page * ITEMS_PER_PAGE + 1}–
+          {Math.min((page + 1) * ITEMS_PER_PAGE, data.total_users)} of{' '}
+          {data.total_users.toLocaleString()}
         </div>
-        <div className="flex space-x-2">
+        <div className="flex gap-2">
           <button
             onClick={handlePrevPage}
             disabled={page === 0}
-            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-30"
           >
-            <ChevronLeft className="w-4 h-4 mr-1" />
-            Previous
+            <ChevronLeft className="w-3.5 h-3.5" />
+            Prev
           </button>
           <button
             onClick={handleNextPage}
             disabled={page >= Math.floor(data.total_users / ITEMS_PER_PAGE)}
-            className="btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
+            className="btn-secondary px-3 py-1.5 text-xs disabled:opacity-30"
           >
             Next
-            <ChevronRight className="w-4 h-4 ml-1" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

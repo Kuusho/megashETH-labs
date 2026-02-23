@@ -2,38 +2,15 @@
 
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { CATEGORIES, getCategoryCounts, type Category, type CategoryInfo } from "@/data/catalogue";
+import { CATEGORIES, getCategoryCounts, type Category } from "@/data/catalogue";
 import {
-  Landmark,
-  ArrowLeftRight,
-  Banknote,
-  Rocket,
-  Layers,
-  LineChart,
-  TrendingUp,
-  Dice5,
-  Wifi,
-  Server,
-  Gamepad2,
-  Users,
-  Brain,
-  LayoutGrid,
+  Landmark, ArrowLeftRight, Banknote, Rocket, Layers, LineChart,
+  TrendingUp, Dice5, Wifi, Server, Gamepad2, Users, Brain, LayoutGrid,
 } from "lucide-react";
 
 const ICONS: Record<string, typeof Landmark> = {
-  Landmark,
-  ArrowLeftRight,
-  Banknote,
-  Rocket,
-  Layers,
-  LineChart,
-  TrendingUp,
-  Dice5,
-  Wifi,
-  Server,
-  Gamepad2,
-  Users,
-  Brain,
+  Landmark, ArrowLeftRight, Banknote, Rocket, Layers, LineChart,
+  TrendingUp, Dice5, Wifi, Server, Gamepad2, Users, Brain,
 };
 
 interface CategoryFilterProps {
@@ -47,18 +24,15 @@ export function CategoryFilter({ selected, onChange }: CategoryFilterProps) {
 
   return (
     <div className="flex flex-wrap gap-2">
-      {/* All button */}
       <CategoryButton
         id="all"
         name="All"
         icon={LayoutGrid}
         count={totalCount}
-        color="#00D395"
+        color="#84e296"
         isSelected={selected === "all"}
         onClick={() => onChange("all")}
       />
-
-      {/* Category buttons */}
       {CATEGORIES.map((category) => {
         const Icon = ICONS[category.icon] || Landmark;
         return (
@@ -88,44 +62,37 @@ interface CategoryButtonProps {
   onClick: () => void;
 }
 
-function CategoryButton({
-  id,
-  name,
-  icon: Icon,
-  count,
-  color,
-  isSelected,
-  onClick,
-}: CategoryButtonProps) {
+function CategoryButton({ id, name, icon: Icon, count, color, isSelected, onClick }: CategoryButtonProps) {
   return (
     <motion.button
       onClick={onClick}
-      className={cn(
-        "relative inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
-        "border transition-all duration-200",
-        isSelected
-          ? "border-transparent shadow-md"
-          : "border-mega-gray-200 bg-white hover:border-mega-gray-300"
-      )}
+      className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border transition-all duration-150"
       style={
         isSelected
           ? {
-              backgroundColor: `${color}15`,
-              color: color,
-              borderColor: `${color}30`,
-            }
-          : {}
+            backgroundColor: `${color}12`,
+            color: color,
+            borderColor: `${color}35`,
+          }
+          : {
+            backgroundColor: "rgba(174, 164, 191, 0.06)",
+            color: "#aea4bf",
+            borderColor: "rgba(174, 164, 191, 0.15)",
+          }
       }
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
-      <Icon className="w-4 h-4" />
+      <Icon className="w-3.5 h-3.5" />
       <span>{name}</span>
       <span
-        className={cn(
-          "text-xs px-1.5 py-0.5 rounded-full",
-          isSelected ? "bg-white/50" : "bg-mega-gray-100 text-mega-gray-500"
-        )}
+        className="text-[10px] px-1.5 py-0.5 rounded-full font-mono"
+        style={{
+          backgroundColor: isSelected
+            ? "rgba(255,255,255,0.15)"
+            : "rgba(174, 164, 191, 0.1)",
+          color: isSelected ? color : "#8f6593",
+        }}
       >
         {count}
       </span>
@@ -133,11 +100,8 @@ function CategoryButton({
   );
 }
 
-// Compact sidebar version
-export function CategoryFilterSidebar({
-  selected,
-  onChange,
-}: CategoryFilterProps) {
+// Compact sidebar variant
+export function CategoryFilterSidebar({ selected, onChange }: CategoryFilterProps) {
   const counts = getCategoryCounts();
   const totalCount = Object.values(counts).reduce((a, b) => a + b, 0);
 
@@ -149,13 +113,15 @@ export function CategoryFilterSidebar({
         isSelected={selected === "all"}
         onClick={() => onChange("all")}
       />
+      <div className="pt-4 pb-1">
+        <h3
 
-      <div className="pt-4 pb-2">
-        <h3 className="px-3 text-xs font-semibold text-mega-gray-400 uppercase tracking-wider">
+          className="px-3 text-[10px] font-semibold uppercase tracking-wider"
+          style={{ color: "#8f6593" }}
+        >
           Categories
         </h3>
       </div>
-
       {CATEGORIES.map((category) => (
         <SidebarItem
           key={category.id}
@@ -178,39 +144,23 @@ interface SidebarItemProps {
   onClick: () => void;
 }
 
-function SidebarItem({
-  name,
-  count,
-  color,
-  isSelected,
-  onClick,
-}: SidebarItemProps) {
+function SidebarItem({ name, count, color, isSelected, onClick }: SidebarItemProps) {
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm",
-        "transition-all duration-150",
-        isSelected
-          ? "bg-mega-green/10 text-mega-green font-medium"
-          : "text-mega-gray-600 hover:bg-mega-gray-100"
-      )}
+      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors duration-150"
+      style={{
+        backgroundColor: isSelected ? "rgba(132, 226, 150, 0.08)" : "transparent",
+        color: isSelected ? "#84e296" : "#aea4bf",
+      }}
     >
       <div className="flex items-center gap-2">
         {color && (
-          <div
-            className="w-2 h-2 rounded-full"
-            style={{ backgroundColor: color }}
-          />
+          <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
         )}
-        <span>{name}</span>
+        <span className={isSelected ? "font-medium" : ""}>{name}</span>
       </div>
-      <span
-        className={cn(
-          "text-xs",
-          isSelected ? "text-mega-green" : "text-mega-gray-400"
-        )}
-      >
+      <span className="text-xs font-mono" style={{ color: isSelected ? "#84e296" : "#8f6593" }}>
         {count}
       </span>
     </button>

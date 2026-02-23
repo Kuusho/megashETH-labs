@@ -1,9 +1,3 @@
-/**
- * Multiplier Badge Component
- * 
- * Displays individual multiplier status with tooltip.
- */
-
 'use client';
 
 import { useState } from 'react';
@@ -33,20 +27,22 @@ export function MultiplierBadge({
       onMouseLeave={() => setShowTooltip(false)}
     >
       <div
-        className={`
-          inline-flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium
-          transition-all duration-200 cursor-help
-          ${
-            active
-              ? 'bg-mega-green text-white shadow-sm'
-              : 'bg-mega-gray-100 text-mega-gray-400'
-          }
-        `}
+        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-help"
+        style={{
+          backgroundColor: active
+            ? 'rgba(132, 226, 150, 0.12)'
+            : 'rgba(174, 164, 191, 0.08)',
+          color: active ? '#84e296' : '#8f6593',
+          border: `1px solid ${active ? 'rgba(132, 226, 150, 0.3)' : 'rgba(174, 164, 191, 0.15)'}`,
+        }}
       >
-        <span>{emoji}</span>
+        <span className="text-sm leading-none">{emoji}</span>
         <span>{label}</span>
         {active && (
-          <span className="text-xs font-bold opacity-90">
+          <span
+            className="font-mono font-bold text-[10px]"
+            style={{ color: '#84e296' }}
+          >
             {multiplier}
           </span>
         )}
@@ -56,14 +52,26 @@ export function MultiplierBadge({
       <AnimatePresence>
         {showTooltip && (
           <motion.div
-            initial={{ opacity: 0, y: 5 }}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 5 }}
-            transition={{ duration: 0.15 }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 bg-mega-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-10"
+            exit={{ opacity: 0, y: 4 }}
+            transition={{ duration: 0.12 }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg whitespace-nowrap z-20 shadow-lg"
+            style={{
+              backgroundColor: '#2d1b22',
+              color: '#aea4bf',
+              border: '1px solid rgba(174, 164, 191, 0.2)',
+            }}
           >
             {description}
-            <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-mega-gray-900" />
+            <div
+              className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0"
+              style={{
+                borderLeft: '4px solid transparent',
+                borderRight: '4px solid transparent',
+                borderTop: '4px solid #2d1b22',
+              }}
+            />
           </motion.div>
         )}
       </AnimatePresence>

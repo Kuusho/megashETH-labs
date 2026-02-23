@@ -2,145 +2,128 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { ArrowRight, Zap, TrendingUp, Users, Sparkles, Rabbit } from "lucide-react";
-import { BunnyMascot, GlowCarrot } from "@/components/BunnyMascot";
+import {
+  ArrowRight,
+  Zap,
+  TrendingUp,
+  Users,
+  Sparkles,
+  Flame,
+  LayoutDashboard,
+  Trophy,
+  Rocket,
+} from "lucide-react";
 
 const features = [
   {
     name: "Transaction Heatmap",
     description:
-      "github-style activity graph for your megaeth onchain presence. track streaks, compete, flex your contributions. bunny-approved 🐰",
+      "GitHub-style activity graph for your MegaETH onchain presence. Track streaks, compete, and visualize your contributions over time.",
     href: "/heatmap",
-    icon: "🔥",
-    gradient: "from-carrot-400 to-bunny-pink-400",
+    icon: Flame,
     stats: "365 days tracked",
-    funFact: "fire beats, no cap",
   },
   {
     name: "Points Dashboard",
     description:
-      "megaeth native score system. earn points for txs, streaks, and ecosystem participation. real-time leaderboards, multipliers, the whole thing.",
+      "MegaETH native score system. Earn points for transactions, streaks, and ecosystem participation with real-time leaderboards and multipliers.",
     href: "/dashboard",
-    icon: "📊",
-    gradient: "from-bunny-blue-400 to-bunny-green-400",
-    stats: "live scoring",
-    funFact: "grind szn",
+    icon: LayoutDashboard,
+    stats: "Live scoring",
   },
   {
     name: "Top Contributors",
     description:
-      "global leaderboard of megaeth power users. current streak leaders, highest tx counts, most active wallets. who's really locked in?",
+      "Global leaderboard of MegaETH power users. Current streak leaders, highest transaction counts, most active wallets.",
     href: "/leaderboard",
-    icon: "🏆",
-    gradient: "from-bunny-purple-400 to-bunny-yellow-400",
-    stats: "live rankings",
-    funFact: "real ones only",
+    icon: Trophy,
+    stats: "Live rankings",
   },
   {
     name: "Deployment Tracker",
     description:
-      "every contract deployment on megaeth, catalogued and analyzed. from defi protocols to memecoins. intel for builders and degens alike.",
+      "Every contract deployment on MegaETH, catalogued and analyzed. From DeFi protocols to experiments — intel for builders.",
     href: "/deployments",
-    icon: "🚀",
-    gradient: "from-bunny-pink-400 to-carrot-400",
+    icon: Rocket,
     stats: "36+ tracked",
-    funFact: "alpha central",
   },
 ];
 
 const stats = [
-  { label: "Sub-ms Latency", value: "<1ms", icon: Zap, color: "#ffe66d" },
-  { label: "TPS Capacity", value: "100K+", icon: TrendingUp, color: "#4ecdc4" },
-  { label: "Ecosystem Growth", value: "📈", icon: Users, color: "#ff85d4" },
+  { label: "Sub-ms Latency", value: "<1ms", icon: Zap },
+  { label: "TPS Capacity", value: "100K+", icon: TrendingUp },
+  { label: "Active Wallets", value: "Live", icon: Users },
 ];
 
 export default function HomePage() {
   return (
     <div className="relative min-h-screen">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-[600px] h-[600px] rounded-full blur-[150px] opacity-20"
-          style={{ backgroundColor: '#ff6b35' }} />
-        <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] rounded-full blur-[120px] opacity-20"
-          style={{ backgroundColor: '#ff85d4' }} />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] rounded-full blur-[100px] opacity-10"
-          style={{ backgroundColor: '#4ecdc4' }} />
-      </div>
 
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-32 overflow-hidden">
+      {/* ── Hero ─────────────────────────────────────────── */}
+      <section className="relative pt-24 pb-28 overflow-hidden">
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.5 }}
             className="text-center"
           >
-            {/* Floating bunny */}
+            {/* Live badge */}
             <motion.div
-              className="flex justify-center mb-8"
-              animate={{
-                y: [0, -10, 0],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatType: "reverse",
-                ease: "easeInOut",
-              }}
-            >
-              <BunnyMascot size="lg" animated interactive />
-            </motion.div>
-
-            {/* Badge */}
-            <motion.div
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full border-2 mb-8"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border mb-8 text-xs font-mono"
               style={{
-                background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1), rgba(255, 133, 212, 0.1))',
-                borderColor: '#ff6b35',
+                backgroundColor: "rgba(132, 226, 150, 0.06)",
+                borderColor: "rgba(132, 226, 150, 0.22)",
+                color: "#84e296",
               }}
-              whileHover={{ scale: 1.05 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.15 }}
             >
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
-                  style={{ backgroundColor: '#06ffa5' }} />
-                <span className="relative inline-flex rounded-full h-2 w-2"
-                  style={{ backgroundColor: '#06ffa5' }} />
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#84e296] opacity-60" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#84e296]" />
               </span>
-              <span className="text-sm font-bold" style={{ color: '#ff6b35' }}>
-                bunny speed gud • megaeth mainnet live
-              </span>
-              <GlowCarrot />
+              megaeth mainnet live
             </motion.div>
 
-            {/* Main heading */}
+            {/* Heading */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              <span style={{ color: '#dfdadb' }}>onchain intel for the</span>
+              <span style={{ color: "#f5f8de" }}>Onchain intel for</span>
               <br />
-              <span className="text-gradient-rainbow animate-shimmer">
-                real-time blockchain
-              </span>
+              <span style={{ color: "#84e296" }}>the real-time chain</span>
             </h1>
 
             {/* Subheading */}
-            <p className="text-lg sm:text-xl max-w-2xl mx-auto mb-10" style={{ color: '#a8a3a4' }}>
-              track your activity, discover alpha, compete on leaderboards.
-              <br />
-              <span className="text-gradient-bunny font-semibold">powered by bunny intel.</span>
+            <p
+              className="text-lg sm:text-xl max-w-xl mx-auto mb-10 leading-relaxed"
+              style={{ color: "#aea4bf" }}
+            >
+              Track your activity, discover alpha, and compete on the
+              leaderboard.{" "}
+              <span style={{ color: "#f5f8de" }} className="font-semibold">
+                Powered by Bunny Intel.
+              </span>
             </p>
 
-            {/* CTA buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link href="/heatmap" className="btn-primary text-base px-8 py-4 flex items-center gap-2">
-                  <span>view your heatmap</span>
+            {/* CTAs */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href="/heatmap"
+                  className="btn-primary px-7 py-2.5 flex items-center gap-2"
+                >
+                  View your heatmap
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.div>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Link href="/dashboard" className="btn-secondary text-base px-8 py-4 flex items-center gap-2">
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                <Link
+                  href="/dashboard"
+                  className="btn-secondary px-7 py-2.5 flex items-center gap-2"
+                >
                   <Sparkles className="w-4 h-4" />
-                  <span>explore dashboard</span>
+                  Explore dashboard
                 </Link>
               </motion.div>
             </div>
@@ -148,182 +131,161 @@ export default function HomePage() {
 
           {/* Stats row */}
           <motion.div
-            initial={{ opacity: 0, y: 40 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mt-20 grid grid-cols-3 gap-8 max-w-3xl mx-auto"
+            transition={{ duration: 0.5, delay: 0.25 }}
+            className="mt-20 grid grid-cols-3 gap-8 max-w-2xl mx-auto"
           >
-            {stats.map((stat, index) => (
-              <motion.div
-                key={stat.label}
-                className="text-center"
-                whileHover={{ y: -5 }}
-                transition={{ type: "spring", stiffness: 300 }}
-              >
-                <motion.div
-                  className="inline-flex items-center justify-center w-14 h-14 rounded-xl mb-3"
-                  style={{
-                    background: `linear-gradient(135deg, ${stat.color}40, ${stat.color}20)`,
-                    border: `2px solid ${stat.color}60`,
-                  }}
-                  whileHover={{ rotate: 360 }}
-                  transition={{ duration: 0.6 }}
+            {stats.map((stat) => (
+              <div key={stat.label} className="text-center">
+                <div
+                  className="text-3xl font-bold font-mono mb-1 tabular-nums"
+                  style={{ color: "#f5f8de" }}
                 >
-                  <stat.icon className="w-7 h-7" style={{ color: stat.color }} />
-                </motion.div>
-                <div className="text-3xl font-bold mb-1" style={{ color: '#dfdadb' }}>
                   {stat.value}
                 </div>
-                <div className="text-sm font-semibold" style={{ color: '#878283' }}>
+                <div
+                  className="text-xs font-medium uppercase tracking-wider"
+                  style={{ color: "#8f6593" }}
+                >
                   {stat.label}
                 </div>
-              </motion.div>
+              </div>
             ))}
           </motion.div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="relative py-24">
+      {/* ── Features ─────────────────────────────────────── */}
+      <section
+        className="relative py-20 border-t"
+        style={{ borderColor: "rgba(174, 164, 191, 0.1)" }}
+      >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.4 }}
+            className="mb-12"
           >
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4" style={{ color: '#dfdadb' }}>
-              tools for <span className="text-gradient-carrot">builders</span> & <span className="text-gradient-bunny">degens</span>
+            <h2
+              className="text-3xl sm:text-4xl font-bold mb-3"
+              style={{ color: "#f5f8de" }}
+            >
+              Tools for builders & degens
             </h2>
-            <p className="text-lg" style={{ color: '#878283' }}>
-              day one infrastructure for the megaeth ecosystem
+            <p className="text-base" style={{ color: "#8f6593" }}>
+              Day one infrastructure for the MegaETH ecosystem
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Link href={feature.href} className="block group h-full">
-                  <motion.div
-                    className="card p-8 h-full relative overflow-hidden"
-                    whileHover={{ y: -8 }}
-                    transition={{ type: "spring", stiffness: 300 }}
-                  >
-                    {/* Gradient overlay on hover */}
-                    <div
-                      className="absolute top-0 left-0 right-0 h-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                      style={{
-                        background: `linear-gradient(90deg, var(--tw-gradient-stops))`,
-                      }}
-                    />
-
-                    {/* Icon */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {features.map((feature, index) => {
+              const Icon = feature.icon;
+              return (
+                <motion.div
+                  key={feature.name}
+                  initial={{ opacity: 0, y: 16 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: index * 0.07 }}
+                >
+                  <Link href={feature.href} className="block group h-full">
                     <motion.div
-                      className="text-5xl mb-4"
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      transition={{ type: "spring", stiffness: 400 }}
+                      className="card p-6 h-full flex flex-col"
+                      whileHover={{ y: -4 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 28 }}
                     >
-                      {feature.icon}
-                    </motion.div>
+                      {/* Icon */}
+                      <div
+                        className="w-9 h-9 rounded-lg flex items-center justify-center mb-4 flex-shrink-0"
+                        style={{
+                          backgroundColor: "rgba(132, 226, 150, 0.1)",
+                          border: "1px solid rgba(132, 226, 150, 0.18)",
+                        }}
+                      >
+                        <Icon className="w-4 h-4" style={{ color: "#84e296" }} />
+                      </div>
 
-                    {/* Content */}
-                    <h3 className="text-2xl font-bold mb-3" style={{ color: '#dfdadb' }}>
-                      {feature.name}
-                    </h3>
-                    <p className="mb-4 leading-relaxed" style={{ color: '#a8a3a4' }}>
-                      {feature.description}
-                    </p>
+                      <h3
+                        className="text-lg font-bold mb-2"
+                        style={{ color: "#f5f8de" }}
+                      >
+                        {feature.name}
+                      </h3>
+                      <p
+                        className="text-sm leading-relaxed mb-4 flex-1"
+                        style={{ color: "#aea4bf" }}
+                      >
+                        {feature.description}
+                      </p>
 
-                    {/* Footer */}
-                    <div className="flex items-center justify-between mt-auto pt-4">
-                      <div className="flex flex-col gap-1">
-                        <span className="text-xs font-mono font-semibold" style={{ color: '#ff6b35' }}>
+                      {/* Card footer */}
+                      <div
+                        className="flex items-center justify-between pt-4 border-t mt-auto"
+                        style={{ borderColor: "rgba(174, 164, 191, 0.1)" }}
+                      >
+                        <span
+                          className="text-xs font-mono font-medium"
+                          style={{ color: "#84e296" }}
+                        >
                           {feature.stats}
                         </span>
-                        <span className="text-xs italic" style={{ color: '#666162' }}>
-                          "{feature.funFact}"
-                        </span>
+                        <motion.span
+                          className="flex items-center gap-1 text-xs font-medium"
+                          style={{ color: "#8f6593" }}
+                          whileHover={{ x: 3 }}
+                          transition={{ type: "spring", stiffness: 400 }}
+                        >
+                          Explore
+                          <ArrowRight className="w-3 h-3" />
+                        </motion.span>
                       </div>
-                      <motion.div
-                        className="flex items-center gap-1 font-bold"
-                        style={{ color: '#ff85d4' }}
-                        whileHover={{ x: 5 }}
-                        transition={{ type: "spring", stiffness: 300 }}
-                      >
-                        explore
-                        <ArrowRight className="w-4 h-4" />
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                </Link>
-              </motion.div>
-            ))}
+                    </motion.div>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="relative py-24">
+      {/* ── CTA ──────────────────────────────────────────── */}
+      <section className="relative py-20">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            transition={{ duration: 0.6 }}
-            className="relative overflow-hidden rounded-3xl px-8 py-16 sm:px-16 sm:py-24"
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-2xl px-10 py-16 sm:px-16 sm:py-20 text-center"
             style={{
-              background: 'linear-gradient(135deg, rgba(255, 107, 53, 0.1) 0%, rgba(255, 133, 212, 0.1) 50%, rgba(78, 205, 196, 0.1) 100%)',
-              border: '2px solid',
-              borderColor: '#ff6b35',
+              backgroundColor: "rgba(132, 226, 150, 0.04)",
+              border: "1px solid rgba(132, 226, 150, 0.14)",
             }}
           >
-            {/* Background pattern */}
-            <div className="absolute inset-0 bg-dots opacity-20" />
-            <div className="absolute top-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-30"
-              style={{ backgroundColor: '#ff85d4' }} />
-            <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full blur-3xl opacity-30"
-              style={{ backgroundColor: '#4ecdc4' }} />
-
-            <div className="relative text-center">
-              <motion.div
-                className="flex justify-center mb-6"
-                animate={{
-                  rotate: [0, 10, -10, 10, 0],
-                }}
-                transition={{
-                  duration: 4,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
+            <div className="absolute inset-0 bg-grid opacity-60" />
+            <div className="relative">
+              <h2
+                className="text-3xl sm:text-4xl font-bold mb-4"
+                style={{ color: "#f5f8de" }}
               >
-                <span className="text-6xl filter drop-shadow-lg">
-                  🐰✨
-                </span>
-              </motion.div>
-
-              <h2 className="text-3xl sm:text-4xl font-bold mb-4" style={{ color: '#dfdadb' }}>
-                ready to hop in?
+                Ready to start tracking?
               </h2>
-              <p className="text-lg max-w-xl mx-auto mb-8" style={{ color: '#a8a3a4' }}>
-                connect your wallet and start tracking your megaeth activity.
-                <br />
-                <span className="font-bold text-gradient-bunny">bunny speed gud. drug-induced blocktimes.</span>
+              <p
+                className="text-base max-w-lg mx-auto mb-8"
+                style={{ color: "#aea4bf" }}
+              >
+                Connect your wallet and start tracking your MegaETH activity.
               </p>
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Link
                   href="/heatmap"
-                  className="btn-primary text-lg px-10 py-4 inline-flex items-center gap-2"
+                  className="btn-primary px-8 py-3 inline-flex items-center gap-2"
                 >
-                  <Rabbit className="w-5 h-5" />
-                  get started
-                  <ArrowRight className="w-5 h-5" />
+                  Get started
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </motion.div>
             </div>
@@ -332,9 +294,9 @@ export default function HomePage() {
       </section>
 
       {/* Footer note */}
-      <div className="relative pb-12 text-center">
-        <p className="text-sm font-mono" style={{ color: '#666162' }}>
-          built with 🥕 by pan • bunny intel • methalio
+      <div className="pb-10 text-center">
+        <p className="text-xs font-mono" style={{ color: "#8f6593" }}>
+          built by pan · bunny intel · megaeth
         </p>
       </div>
     </div>
