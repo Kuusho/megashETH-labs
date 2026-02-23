@@ -7,6 +7,7 @@ import { type ReactNode, useState, useEffect } from "react";
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { LeaderboardProvider } from "@/lib/leaderboard";
+import { ThemeProvider } from "@/contexts/ThemeContext";
 
 // MegaETH chain configuration (testnet for now)
 const megaeth = {
@@ -72,20 +73,22 @@ export function Providers({ children }: { children: ReactNode }) {
   }
 
   return (
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          modalSize="compact"
-          appInfo={{
-            appName: "Bunny Intel",
-            learnMoreUrl: "https://megaeth.com",
-          }}
-        >
-          <LeaderboardProvider>
-            {children}
-          </LeaderboardProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    <ThemeProvider>
+      <WagmiProvider config={config}>
+        <QueryClientProvider client={queryClient}>
+          <RainbowKitProvider
+            modalSize="compact"
+            appInfo={{
+              appName: "Bunny Intel",
+              learnMoreUrl: "https://megaeth.com",
+            }}
+          >
+            <LeaderboardProvider>
+              {children}
+            </LeaderboardProvider>
+          </RainbowKitProvider>
+        </QueryClientProvider>
+      </WagmiProvider>
+    </ThemeProvider>
   );
 }

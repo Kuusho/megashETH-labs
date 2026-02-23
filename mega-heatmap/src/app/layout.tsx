@@ -49,11 +49,9 @@ export default function RootLayout({
     <html
       lang="en"
       className={`dark ${spaceGrotesk.variable} ${spaceMono.variable}`}
+      suppressHydrationWarning
     >
-      <body
-        className="min-h-screen antialiased font-sans"
-        style={{ backgroundColor: "#3b252c" }}
-      >
+      <body className="min-h-screen antialiased font-sans">
         <Providers>
           {/* Subtle grid texture */}
           <div className="fixed inset-0 bg-grid pointer-events-none" />

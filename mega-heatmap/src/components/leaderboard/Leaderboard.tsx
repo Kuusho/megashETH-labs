@@ -27,7 +27,7 @@ interface LeaderboardData {
 
 const RANK_COLORS: Record<number, string> = {
   1: '#e8c37a', // gold
-  2: '#aea4bf', // silver (Lilac Ash)
+  2: 'var(--color-muted)', // silver (Lilac Ash)
   3: '#b8825e', // bronze
 };
 
@@ -70,8 +70,8 @@ export function Leaderboard() {
     return (
       <div className="card p-8">
         <div className="flex items-center justify-center gap-3">
-          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#84e296' }} />
-          <p className="text-sm" style={{ color: '#aea4bf' }}>Loading leaderboard...</p>
+          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading leaderboard...</p>
         </div>
       </div>
     );
@@ -91,8 +91,8 @@ export function Leaderboard() {
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
         <div className="flex items-center gap-2.5">
-          <Trophy className="w-4 h-4" style={{ color: '#84e296' }} />
-          <h2 className="text-lg font-bold" style={{ color: '#f5f8de' }}>
+          <Trophy className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
+          <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
             MegaETH Leaderboard
           </h2>
         </div>
@@ -103,12 +103,12 @@ export function Leaderboard() {
         >
           <RefreshCw
             className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-            style={{ color: '#8f6593' }}
+            style={{ color: 'var(--color-dim)' }}
           />
         </button>
       </div>
 
-      <p className="px-6 py-3 text-xs font-mono border-b" style={{ color: '#8f6593', borderColor: 'rgba(174, 164, 191, 0.08)' }}>
+      <p className="px-6 py-3 text-xs font-mono border-b" style={{ color: 'var(--color-dim)', borderColor: 'rgba(174, 164, 191, 0.08)' }}>
         {data.total_users.toLocaleString()} total users · Updated daily at midnight UTC
       </p>
 
@@ -121,7 +121,7 @@ export function Leaderboard() {
                 <th
                   key={h}
                   className={`py-3 px-4 text-xs font-semibold uppercase tracking-wider ${i > 1 ? 'text-right' : 'text-left'}`}
-                  style={{ color: '#8f6593' }}
+                  style={{ color: 'var(--color-dim)' }}
                 >
                   {h}
                 </th>
@@ -151,7 +151,7 @@ export function Leaderboard() {
                   <td className="py-3.5 px-4">
                     <span
                       className="text-sm font-mono font-semibold"
-                      style={{ color: rankColor ?? '#aea4bf' }}
+                      style={{ color: rankColor ?? 'var(--color-muted)' }}
                     >
                       {entry.rank <= 3 ? '▲' : ''} #{entry.rank}
                     </span>
@@ -160,7 +160,7 @@ export function Leaderboard() {
                     <div className="flex items-center gap-2">
                       <code
                         className="text-xs font-mono"
-                        style={{ color: '#aea4bf' }}
+                        style={{ color: 'var(--color-muted)' }}
                       >
                         {entry.address.slice(0, 6)}...{entry.address.slice(-4)}
                       </code>
@@ -169,7 +169,7 @@ export function Leaderboard() {
                           className="px-1.5 py-0.5 text-[10px] font-semibold rounded"
                           style={{
                             backgroundColor: 'rgba(132, 226, 150, 0.12)',
-                            color: '#84e296',
+                            color: 'var(--color-accent)',
                           }}
                         >
                           YOU
@@ -178,17 +178,17 @@ export function Leaderboard() {
                     </div>
                   </td>
                   <td className="py-3.5 px-4 text-right">
-                    <span className="text-sm font-mono font-semibold" style={{ color: '#f5f8de' }}>
+                    <span className="text-sm font-mono font-semibold" style={{ color: 'var(--color-text)' }}>
                       {entry.score.toLocaleString()}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: 'var(--color-muted)' }}>
                     {entry.total_txs.toLocaleString()}
                   </td>
-                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: 'var(--color-muted)' }}>
                     {entry.days_active}
                   </td>
-                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: '#aea4bf' }}>
+                  <td className="py-3.5 px-4 text-right text-sm font-mono" style={{ color: 'var(--color-muted)' }}>
                     {entry.contracts_deployed}
                   </td>
                 </motion.tr>
@@ -203,7 +203,7 @@ export function Leaderboard() {
         className="flex items-center justify-between px-6 py-4 border-t"
         style={{ borderColor: 'rgba(174, 164, 191, 0.1)' }}
       >
-        <div className="text-xs font-mono" style={{ color: '#8f6593' }}>
+        <div className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
           {page * ITEMS_PER_PAGE + 1}–
           {Math.min((page + 1) * ITEMS_PER_PAGE, data.total_users)} of{' '}
           {data.total_users.toLocaleString()}

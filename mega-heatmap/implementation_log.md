@@ -415,3 +415,68 @@ No source code changes required — all redesign files were valid.
 
 **Last Updated:** 2026-02-23
 **Current Status:** Dark Quant Terminal design live, dev environment running ✅
+
+---
+
+## Session: Live Deployment Catalogue + Auto-Revalidation
+
+**Date:** 2026-02-24
+**Model:** Claude Sonnet 4.6
+**Goal:** Replace `/deployments` "under construction" with a live card catalogue driven by `tracker.db`, wired to auto-revalidate on enrichment
+
+---
+
+### What Was Built
+
+**1. `src/app/api/revalidate/route.ts` — NEW**
+POST endpoint, protected by `REVALIDATE_SECRET` env var.
+Calls `revalidatePath('/dashboard')` + `revalidatePath('/deployments')` to bust Next.js Data Cache instantly after enrichment.
+
+**2. `src/app/api/dashboard/deployments/route.ts` — MODIFIED**
+- Imports `PROJECTS` from `@/data/catalogue` at module load
+- Builds `Map<lowercase_handle → { description, featured }>` once (fast, zero runtime cost per request)
+- Each deployment in the JSON response now includes `description: string | null` and `featured: boolean`
+- Handle normalisation: strips leading `@`, lowercases — matches DB `project` field to catalogue `twitter` field
+- `CACHE_TTL_SECONDS` reduced from 1800 → 300 (5 min)
+
+**3. `src/app/deployments/page.tsx` — REBUILT**
+Full live catalogue replacing the placeholder:
+- Client component, fetches `/api/dashboard/deployments?limit=100` on mount
+- Auto-refreshes every 5 min (same pattern as `EcosystemStats`)
+- Category filter tab pills — driven by `data.categories` from API, colour-matched to `CATEGORIES` in `catalogue.ts` where possible; graceful fallback for DB-only categories
+- Card grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
+- `ProjectLiveCard` shows: project name, verified checkmark, featured star, category badge (coloured), description, classification badge (ALPHA/ROUTINE/WARNING/RISK with colour coding), TVL, `@twitter` handle
+- 9-card loading skeleton during initial fetch
+- Empty state for zero results
+
+**4. `deployment-tracker/scripts/enrichment.js` — MODIFIED**
+Added `notifyHeatmap()` helper called at end of `main()` (before `db.close()`).
+POSTs to `/api/revalidate?secret=X`. Non-fatal — errors are logged as WARN.
+
+**Env vars added:**
+- `mega-heatmap/.env.local`: `REVALIDATE_SECRET=bunny-revalidate-2026`
+- `deployment-tracker/.env`: `HEATMAP_URL=http://localhost:3000`, `REVALIDATE_SECRET=bunny-revalidate-2026`
+- Production: change `HEATMAP_URL` to Vercel URL
+
+---
+
+### Verification (dev server port 3002)
+
+| Check | Result |
+|---|---|
+| `GET /deployments` | 200 ✅ |
+| `GET /api/dashboard/deployments?limit=5` | 200, `description`/`featured` merged ✅ |
+| `POST /api/revalidate?secret=bunny-revalidate-2026` | `{"revalidated":true}` 200 ✅ |
+| `POST /api/revalidate?secret=wrong` | `{"error":"Invalid secret"}` 401 ✅ |
+| `indexedDB` SSR errors | Pre-existing, from WalletConnect/wagmi provider, not introduced here ✅ |
+
+### Known Observations
+
+- DB categories (`bridge`, `gaming`, `infra`, `nft`, `oracle`, `trading`) don't map to any `catalogue.ts` category, so those filter tabs render without a branded colour. Graceful fallback to default styling — functions correctly.
+- Catalogue has `dex`, `lending`, `perps`, etc. — these don't yet appear in DB, so no filter tabs for them.
+- Category taxonomy divergence: curator should align DB categories with `catalogue.ts` over time (or add missing colours to CATEGORIES).
+
+---
+
+**Last Updated:** 2026-02-24
+**Current Status:** Live catalogue at `/deployments` shipping ✅, auto-revalidation wired ✅

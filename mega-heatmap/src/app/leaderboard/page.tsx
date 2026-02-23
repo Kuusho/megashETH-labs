@@ -18,17 +18,17 @@ export default function LeaderboardPage() {
         >
           <Link
             href="/heatmap"
-            className="inline-flex items-center text-sm mb-4 transition-colors hover:text-[#f5f8de]"
-            style={{ color: "#8f6593" }}
+            className="inline-flex items-center text-sm mb-4 transition-colors hover:text-[var(--color-text)]"
+            style={{ color: "var(--color-dim)" }}
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Heatmap
           </Link>
 
-          <h1 className="text-4xl font-bold tracking-tight" style={{ color: "#f5f8de" }}>
+          <h1 className="text-4xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>
             MegaETH Leaderboard
           </h1>
-          <p className="mt-2 text-sm" style={{ color: "#8f6593" }}>
+          <p className="mt-2 text-sm" style={{ color: "var(--color-dim)" }}>
             Top builders ranked by onchain activity score
           </p>
         </motion.div>
@@ -49,7 +49,7 @@ export default function LeaderboardPage() {
           transition={{ delay: 0.2 }}
           className="mt-8 text-center"
         >
-          <p className="text-sm mb-4" style={{ color: "#8f6593" }}>
+          <p className="text-sm mb-4" style={{ color: "var(--color-dim)" }}>
             Not on the leaderboard yet?
           </p>
           <Link href="/heatmap" className="btn-primary">

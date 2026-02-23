@@ -58,8 +58,8 @@ export function EcosystemStats() {
     return (
       <div className="card p-8">
         <div className="flex items-center justify-center gap-3">
-          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#84e296' }} />
-          <p className="text-sm" style={{ color: '#aea4bf' }}>Loading ecosystem data...</p>
+          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading ecosystem data...</p>
         </div>
       </div>
     );
@@ -97,7 +97,7 @@ export function EcosystemStats() {
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
-        <h2 className="text-lg font-bold" style={{ color: '#f5f8de' }}>
+        <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
           MegaETH Ecosystem
         </h2>
         <button
@@ -107,7 +107,7 @@ export function EcosystemStats() {
         >
           <RefreshCw
             className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-            style={{ color: '#8f6593' }}
+            style={{ color: 'var(--color-dim)' }}
           />
         </button>
       </div>
@@ -125,11 +125,11 @@ export function EcosystemStats() {
               className="p-5"
               style={{ backgroundColor: 'var(--color-surface)' }}
             >
-              <Icon className="w-4 h-4 mb-3" style={{ color: '#84e296' }} />
-              <div className="text-2xl font-bold font-mono tabular-nums mb-1" style={{ color: '#f5f8de' }}>
+              <Icon className="w-4 h-4 mb-3" style={{ color: 'var(--color-accent)' }} />
+              <div className="text-2xl font-bold font-mono tabular-nums mb-1" style={{ color: 'var(--color-text)' }}>
                 {stat.value}
               </div>
-              <div className="text-xs uppercase tracking-wider" style={{ color: '#8f6593' }}>
+              <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--color-dim)' }}>
                 {stat.label}
               </div>
             </motion.div>
@@ -147,14 +147,14 @@ export function EcosystemStats() {
           }}
         >
           <div className="flex items-center gap-3">
-            <Crown className="w-4 h-4 flex-shrink-0" style={{ color: '#84e296' }} />
+            <Crown className="w-4 h-4 flex-shrink-0" style={{ color: 'var(--color-accent)' }} />
             <div>
-              <div className="text-xs uppercase tracking-wider mb-0.5" style={{ color: '#8f6593' }}>
+              <div className="text-xs uppercase tracking-wider mb-0.5" style={{ color: 'var(--color-dim)' }}>
                 Top Project by TVL
               </div>
-              <div className="text-sm font-semibold" style={{ color: '#f5f8de' }}>
+              <div className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>
                 {data.top_project.name}
-                <span className="ml-2 font-mono text-xs" style={{ color: '#84e296' }}>
+                <span className="ml-2 font-mono text-xs" style={{ color: 'var(--color-accent)' }}>
                   {data.top_project.tvl_formatted}
                 </span>
               </div>
@@ -168,7 +168,7 @@ export function EcosystemStats() {
         className="px-6 py-3 border-t text-right"
         style={{ borderColor: 'rgba(174, 164, 191, 0.08)' }}
       >
-        <p className="text-xs font-mono" style={{ color: '#8f6593' }}>
+        <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
           Updated {new Date(data.updated_at).toLocaleString()}
         </p>
       </div>

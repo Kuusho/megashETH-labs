@@ -74,34 +74,34 @@ export default function HomePage() {
               style={{
                 backgroundColor: "rgba(132, 226, 150, 0.06)",
                 borderColor: "rgba(132, 226, 150, 0.22)",
-                color: "#84e296",
+                color: "var(--color-accent)",
               }}
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.15 }}
             >
               <span className="relative flex h-1.5 w-1.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#84e296] opacity-60" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#84e296]" />
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[var(--color-accent)] opacity-60" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[var(--color-accent)]" />
               </span>
               megaeth mainnet live
             </motion.div>
 
             {/* Heading */}
             <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight mb-6">
-              <span style={{ color: "#f5f8de" }}>Onchain intel for</span>
+              <span style={{ color: "var(--color-text)" }}>Onchain intel for</span>
               <br />
-              <span style={{ color: "#84e296" }}>the real-time chain</span>
+              <span style={{ color: "var(--color-accent)" }}>the real-time chain</span>
             </h1>
 
             {/* Subheading */}
             <p
               className="text-lg sm:text-xl max-w-xl mx-auto mb-10 leading-relaxed"
-              style={{ color: "#aea4bf" }}
+              style={{ color: "var(--color-muted)" }}
             >
               Track your activity, discover alpha, and compete on the
               leaderboard.{" "}
-              <span style={{ color: "#f5f8de" }} className="font-semibold">
+              <span style={{ color: "var(--color-text)" }} className="font-semibold">
                 Powered by Bunny Intel.
               </span>
             </p>
@@ -140,13 +140,13 @@ export default function HomePage() {
               <div key={stat.label} className="text-center">
                 <div
                   className="text-3xl font-bold font-mono mb-1 tabular-nums"
-                  style={{ color: "#f5f8de" }}
+                  style={{ color: "var(--color-text)" }}
                 >
                   {stat.value}
                 </div>
                 <div
                   className="text-xs font-medium uppercase tracking-wider"
-                  style={{ color: "#8f6593" }}
+                  style={{ color: "var(--color-dim)" }}
                 >
                   {stat.label}
                 </div>
@@ -171,11 +171,11 @@ export default function HomePage() {
           >
             <h2
               className="text-3xl sm:text-4xl font-bold mb-3"
-              style={{ color: "#f5f8de" }}
+              style={{ color: "var(--color-text)" }}
             >
               Tools for builders & degens
             </h2>
-            <p className="text-base" style={{ color: "#8f6593" }}>
+            <p className="text-base" style={{ color: "var(--color-dim)" }}>
               Day one infrastructure for the MegaETH ecosystem
             </p>
           </motion.div>
@@ -205,18 +205,18 @@ export default function HomePage() {
                           border: "1px solid rgba(132, 226, 150, 0.18)",
                         }}
                       >
-                        <Icon className="w-4 h-4" style={{ color: "#84e296" }} />
+                        <Icon className="w-4 h-4" style={{ color: "var(--color-accent)" }} />
                       </div>
 
                       <h3
                         className="text-lg font-bold mb-2"
-                        style={{ color: "#f5f8de" }}
+                        style={{ color: "var(--color-text)" }}
                       >
                         {feature.name}
                       </h3>
                       <p
                         className="text-sm leading-relaxed mb-4 flex-1"
-                        style={{ color: "#aea4bf" }}
+                        style={{ color: "var(--color-muted)" }}
                       >
                         {feature.description}
                       </p>
@@ -228,13 +228,13 @@ export default function HomePage() {
                       >
                         <span
                           className="text-xs font-mono font-medium"
-                          style={{ color: "#84e296" }}
+                          style={{ color: "var(--color-accent)" }}
                         >
                           {feature.stats}
                         </span>
                         <motion.span
                           className="flex items-center gap-1 text-xs font-medium"
-                          style={{ color: "#8f6593" }}
+                          style={{ color: "var(--color-dim)" }}
                           whileHover={{ x: 3 }}
                           transition={{ type: "spring", stiffness: 400 }}
                         >
@@ -269,13 +269,13 @@ export default function HomePage() {
             <div className="relative">
               <h2
                 className="text-3xl sm:text-4xl font-bold mb-4"
-                style={{ color: "#f5f8de" }}
+                style={{ color: "var(--color-text)" }}
               >
                 Ready to start tracking?
               </h2>
               <p
                 className="text-base max-w-lg mx-auto mb-8"
-                style={{ color: "#aea4bf" }}
+                style={{ color: "var(--color-muted)" }}
               >
                 Connect your wallet and start tracking your MegaETH activity.
               </p>
@@ -295,7 +295,7 @@ export default function HomePage() {
 
       {/* Footer note */}
       <div className="pb-10 text-center">
-        <p className="text-xs font-mono" style={{ color: "#8f6593" }}>
+        <p className="text-xs font-mono" style={{ color: "var(--color-dim)" }}>
           built by pan · bunny intel · megaeth
         </p>
       </div>

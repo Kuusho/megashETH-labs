@@ -11,25 +11,25 @@
 @layer base {
   :root {
     /* ── Surfaces ───────────────────────────────── */
-    --color-bg:              #3b252c;
-    --color-surface:         #2d1b22;
-    --color-surface-raised:  #3f2830;
-    --color-border:          rgba(174, 164, 191, 0.15);
-    --color-border-strong:   rgba(174, 164, 191, 0.28);
+    --color-bg: #3b252c;
+    --color-surface: #2d1b22;
+    --color-surface-raised: #3f2830;
+    --color-border: rgba(174, 164, 191, 0.15);
+    --color-border-strong: rgba(174, 164, 191, 0.28);
 
     /* ── Text ───────────────────────────────────── */
-    --color-text:            #f5f8de;
-    --color-muted:           #aea4bf;
-    --color-dim:             #8f6593;
+    --color-text: #f5f8de;
+    --color-muted: #aea4bf;
+    --color-dim: #8f6593;
 
     /* ── Accent (Light Green) ───────────────────── */
-    --color-accent:          #84e296;
-    --color-accent-hover:    #6dd485;
-    --color-accent-dim:      rgba(132, 226, 150, 0.1);
+    --color-accent: #84e296;
+    --color-accent-hover: #6dd485;
+    --color-accent-dim: rgba(132, 226, 150, 0.1);
 
     /* ── Status ─────────────────────────────────── */
-    --color-error:           #ff7b7b;
-    --color-warning:         #e8c37a;
+    --color-error: #ff7b7b;
+    --color-warning: #e8c37a;
 
     /* ── Heatmap — violet scheme (default) ──────── */
     --heat-0: #3b252c;
@@ -37,6 +37,37 @@
     --heat-2: #8f6593;
     --heat-3: #aea4bf;
     --heat-4: #84e296;
+  }
+
+  /* ── LIGHT THEME ─────────────────────────────────────────────────────────── */
+  [data-theme="light"] {
+    /* Surfaces — beige family */
+    --color-bg: #f5f8de;
+    --color-surface: #edf0cc;
+    --color-surface-raised: #e4e8b8;
+    --color-border: rgba(59, 37, 44, 0.10);
+    --color-border-strong: rgba(59, 37, 44, 0.20);
+
+    /* Text — violet family (flipped from dark) */
+    --color-text: #3b252c;
+    --color-muted: #6b4f5f;
+    --color-dim: #9c78a0;
+
+    /* Accent — darker green for contrast on beige */
+    --color-accent: #278d3a;
+    --color-accent-hover: #1d6e2c;
+    --color-accent-dim: rgba(39, 141, 58, 0.10);
+
+    /* Status */
+    --color-error: #c42b2b;
+    --color-warning: #9a680a;
+
+    /* Heatmap violet scheme — lighter base for light bg */
+    --heat-0: #e4e8b8;
+    --heat-1: #c9c4d8;
+    --heat-2: #9c78a0;
+    --heat-3: #6b4f5f;
+    --heat-4: #278d3a;
   }
 
   ::selection {
@@ -61,7 +92,12 @@
     outline-offset: 2px;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-bold tracking-tight;
     color: var(--color-text);
   }
@@ -225,32 +261,123 @@
   }
 
   /* Violet scheme — palette-native, default */
-  .heatmap-cell[data-scheme="violet"][data-level="0"] { background-color: #3b252c; }
-  .heatmap-cell[data-scheme="violet"][data-level="1"] { background-color: #5e3c4a; }
-  .heatmap-cell[data-scheme="violet"][data-level="2"] { background-color: #8f6593; }
-  .heatmap-cell[data-scheme="violet"][data-level="3"] { background-color: #aea4bf; }
-  .heatmap-cell[data-scheme="violet"][data-level="4"] { background-color: #84e296; }
+  .heatmap-cell[data-scheme="violet"][data-level="0"] {
+    background-color: #3b252c;
+  }
+
+  .heatmap-cell[data-scheme="violet"][data-level="1"] {
+    background-color: #5e3c4a;
+  }
+
+  .heatmap-cell[data-scheme="violet"][data-level="2"] {
+    background-color: #8f6593;
+  }
+
+  .heatmap-cell[data-scheme="violet"][data-level="3"] {
+    background-color: #aea4bf;
+  }
+
+  .heatmap-cell[data-scheme="violet"][data-level="4"] {
+    background-color: #84e296;
+  }
 
   /* Fire scheme */
-  .heatmap-cell[data-scheme="fire"][data-level="0"] { background-color: #2d1b22; }
-  .heatmap-cell[data-scheme="fire"][data-level="1"] { background-color: #4a1a0a; }
-  .heatmap-cell[data-scheme="fire"][data-level="2"] { background-color: #8c250a; }
-  .heatmap-cell[data-scheme="fire"][data-level="3"] { background-color: #d43d0f; }
-  .heatmap-cell[data-scheme="fire"][data-level="4"] { background-color: #eb4511; }
+  .heatmap-cell[data-scheme="fire"][data-level="0"] {
+    background-color: #2d1b22;
+  }
+
+  .heatmap-cell[data-scheme="fire"][data-level="1"] {
+    background-color: #4a1a0a;
+  }
+
+  .heatmap-cell[data-scheme="fire"][data-level="2"] {
+    background-color: #8c250a;
+  }
+
+  .heatmap-cell[data-scheme="fire"][data-level="3"] {
+    background-color: #d43d0f;
+  }
+
+  .heatmap-cell[data-scheme="fire"][data-level="4"] {
+    background-color: #eb4511;
+  }
 
   /* Ocean scheme */
-  .heatmap-cell[data-scheme="ocean"][data-level="0"] { background-color: #2d1b22; }
-  .heatmap-cell[data-scheme="ocean"][data-level="1"] { background-color: #0A3069; }
-  .heatmap-cell[data-scheme="ocean"][data-level="2"] { background-color: #0969DA; }
-  .heatmap-cell[data-scheme="ocean"][data-level="3"] { background-color: #54AEFF; }
-  .heatmap-cell[data-scheme="ocean"][data-level="4"] { background-color: #80CCFF; }
+  .heatmap-cell[data-scheme="ocean"][data-level="0"] {
+    background-color: #2d1b22;
+  }
+
+  .heatmap-cell[data-scheme="ocean"][data-level="1"] {
+    background-color: #0A3069;
+  }
+
+  .heatmap-cell[data-scheme="ocean"][data-level="2"] {
+    background-color: #0969DA;
+  }
+
+  .heatmap-cell[data-scheme="ocean"][data-level="3"] {
+    background-color: #54AEFF;
+  }
+
+  .heatmap-cell[data-scheme="ocean"][data-level="4"] {
+    background-color: #80CCFF;
+  }
 
   /* Forest scheme */
-  .heatmap-cell[data-scheme="forest"][data-level="0"] { background-color: #2d1b22; }
-  .heatmap-cell[data-scheme="forest"][data-level="1"] { background-color: #0E4429; }
-  .heatmap-cell[data-scheme="forest"][data-level="2"] { background-color: #006D32; }
-  .heatmap-cell[data-scheme="forest"][data-level="3"] { background-color: #26A641; }
-  .heatmap-cell[data-scheme="forest"][data-level="4"] { background-color: #39D353; }
+  .heatmap-cell[data-scheme="forest"][data-level="0"] {
+    background-color: #2d1b22;
+  }
+
+  .heatmap-cell[data-scheme="forest"][data-level="1"] {
+    background-color: #0E4429;
+  }
+
+  .heatmap-cell[data-scheme="forest"][data-level="2"] {
+    background-color: #006D32;
+  }
+
+  .heatmap-cell[data-scheme="forest"][data-level="3"] {
+    background-color: #26A641;
+  }
+
+  .heatmap-cell[data-scheme="forest"][data-level="4"] {
+    background-color: #39D353;
+  }
+
+  /* ── LIGHT THEME: heatmap cell overrides ───────────────── */
+  /* Violet scheme on beige — warm neutrals → dark green */
+  [data-theme="light"] .heatmap-cell[data-scheme="violet"][data-level="0"] {
+    background-color: #e4e8b8;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="violet"][data-level="1"] {
+    background-color: #c9c4d8;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="violet"][data-level="2"] {
+    background-color: #9c78a0;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="violet"][data-level="3"] {
+    background-color: #5c3b4f;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="violet"][data-level="4"] {
+    background-color: #278d3a;
+  }
+
+  /* Fire / ocean / forest look fine on light bg — only adjust zero level */
+  [data-theme="light"] .heatmap-cell[data-scheme="fire"][data-level="0"] {
+    background-color: #e8e0d4;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="ocean"][data-level="0"] {
+    background-color: #daeaf5;
+  }
+
+  [data-theme="light"] .heatmap-cell[data-scheme="forest"][data-level="0"] {
+    background-color: #dceedd;
+  }
 
   /* ── ALERTS / STATUS ────────────────────────────────── */
 
@@ -277,7 +404,9 @@
     scrollbar-width: none;
   }
 
-  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 
   /* Subtle grid background */
   .bg-grid {
@@ -294,22 +423,46 @@
 
   /* Animations */
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
   }
 
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(10px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   @keyframes bunny-hop {
-    0%, 100% { transform: translateY(0); }
-    50%       { transform: translateY(-4px); }
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-4px);
+    }
   }
 
-  .animate-fade-in     { animation: fadeIn 0.5s ease-out both; }
-  .animate-fade-in-up  { animation: fadeInUp 0.4s ease-out both; }
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-out both;
+  }
+
+  .animate-fade-in-up {
+    animation: fadeInUp 0.4s ease-out both;
+  }
 
   /* Hover utilities */
   .hover-rise:hover {

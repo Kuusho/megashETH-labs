@@ -18,8 +18,8 @@ export default function DashboardPage() {
         >
           <Link
             href="/heatmap"
-            className="inline-flex items-center text-sm mb-4 transition-colors hover:text-[#f5f8de]"
-            style={{ color: "#8f6593" }}
+            className="inline-flex items-center text-sm mb-4 transition-colors hover:text-[var(--color-text)]"
+            style={{ color: "var(--color-dim)" }}
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Heatmap
@@ -27,10 +27,10 @@ export default function DashboardPage() {
 
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-4xl font-bold tracking-tight" style={{ color: "#f5f8de" }}>
+              <h1 className="text-4xl font-bold tracking-tight" style={{ color: "var(--color-text)" }}>
                 MegaETH Dashboard
               </h1>
-              <p className="mt-2 text-sm" style={{ color: "#8f6593" }}>
+              <p className="mt-2 text-sm" style={{ color: "var(--color-dim)" }}>
                 Real-time ecosystem metrics powered by Bunny Intel
               </p>
             </div>
@@ -73,10 +73,10 @@ export default function DashboardPage() {
           transition={{ delay: 0.3 }}
           className="card p-8 text-center"
         >
-          <h3 className="text-xl font-bold mb-2" style={{ color: "#f5f8de" }}>
+          <h3 className="text-xl font-bold mb-2" style={{ color: "var(--color-text)" }}>
             Want premium intel?
           </h3>
-          <p className="text-sm mb-6" style={{ color: "#aea4bf" }}>
+          <p className="text-sm mb-6" style={{ color: "var(--color-muted)" }}>
             Bunny Intel API provides real-time deployment alerts, alpha signals, and more.
           </p>
           <div className="flex items-center justify-center gap-3">

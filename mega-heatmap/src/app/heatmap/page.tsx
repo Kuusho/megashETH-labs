@@ -37,7 +37,7 @@ function generateDemoData(seed: string = "default"): Map<string, number> {
 }
 
 const COLOR_SCHEMES = [
-  { id: "violet", name: "Violet", color: "#84e296" },
+  { id: "violet", name: "Violet", color: "var(--color-dim)" },
   { id: "fire", name: "Fire", color: "#eb4511" },
   { id: "ocean", name: "Ocean", color: "#54AEFF" },
   { id: "forest", name: "Forest", color: "#39D353" },
@@ -367,7 +367,7 @@ export default function HeatmapPage() {
 
             {/* Color scheme picker */}
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: '#8f6593' }}>palette</span>
+              <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-dim)' }}>palette</span>
               <div className="flex items-center gap-1 p-1 rounded-lg" style={{ backgroundColor: 'rgba(174,164,191,0.06)', border: '1px solid rgba(174,164,191,0.12)' }}>
                 {COLOR_SCHEMES.map((scheme) => (
                   <button
@@ -378,7 +378,7 @@ export default function HeatmapPage() {
                     )}
                     style={{
                       backgroundColor: colorScheme === scheme.id ? `${scheme.color}18` : 'transparent',
-                      color: colorScheme === scheme.id ? scheme.color : '#8f6593',
+                      color: colorScheme === scheme.id ? scheme.color : 'var(--color-dim)',
                       border: colorScheme === scheme.id ? `1px solid ${scheme.color}40` : '1px solid transparent',
                     }}
                     title={scheme.name}

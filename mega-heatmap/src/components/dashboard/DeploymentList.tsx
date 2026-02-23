@@ -55,8 +55,8 @@ export function DeploymentList() {
     return (
       <div className="card p-8">
         <div className="flex items-center justify-center gap-3">
-          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#84e296' }} />
-          <p className="text-sm" style={{ color: '#aea4bf' }}>Loading projects...</p>
+          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading projects...</p>
         </div>
       </div>
     );
@@ -75,7 +75,7 @@ export function DeploymentList() {
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
-        <h2 className="text-lg font-bold" style={{ color: '#f5f8de' }}>
+        <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
           Projects on MegaETH
         </h2>
         <button
@@ -85,7 +85,7 @@ export function DeploymentList() {
         >
           <RefreshCw
             className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-            style={{ color: '#8f6593' }}
+            style={{ color: 'var(--color-dim)' }}
           />
         </button>
       </div>
@@ -129,18 +129,18 @@ export function DeploymentList() {
                   className="w-7 h-7 rounded flex items-center justify-center text-xs font-bold font-mono flex-shrink-0"
                   style={{
                     backgroundColor: 'rgba(132, 226, 150, 0.1)',
-                    color: '#84e296',
+                    color: 'var(--color-accent)',
                   }}
                 >
                   {index + 1}
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium" style={{ color: '#f5f8de' }}>
+                    <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
                       {deployment.project}
                     </span>
                     {deployment.verified && (
-                      <CheckCircle className="w-3.5 h-3.5" style={{ color: '#84e296' }} />
+                      <CheckCircle className="w-3.5 h-3.5" style={{ color: 'var(--color-accent)' }} />
                     )}
                     {deployment.classification && (
                       <span
@@ -151,17 +151,17 @@ export function DeploymentList() {
                               ? 'rgba(132, 226, 150, 0.1)'
                               : 'rgba(174, 164, 191, 0.08)',
                           color:
-                            deployment.classification === 'blue-chip' ? '#84e296' : '#8f6593',
+                            deployment.classification === 'blue-chip' ? 'var(--color-accent)' : 'var(--color-dim)',
                         }}
                       >
                         {deployment.classification}
                       </span>
                     )}
                   </div>
-                  <div className="text-xs" style={{ color: '#8f6593' }}>
+                  <div className="text-xs" style={{ color: 'var(--color-dim)' }}>
                     {deployment.category || 'uncategorized'}
                     {deployment.twitter && (
-                      <span className="ml-2" style={{ color: '#84e296' }}>
+                      <span className="ml-2" style={{ color: 'var(--color-accent)' }}>
                         {deployment.twitter}
                       </span>
                     )}
@@ -171,12 +171,12 @@ export function DeploymentList() {
 
               <div className="text-right flex-shrink-0">
                 {deployment.tvl_formatted && (
-                  <div className="text-sm font-semibold font-mono" style={{ color: '#f5f8de' }}>
+                  <div className="text-sm font-semibold font-mono" style={{ color: 'var(--color-text)' }}>
                     {deployment.tvl_formatted}
                   </div>
                 )}
                 {deployment.tx_count && (
-                  <div className="text-xs font-mono" style={{ color: '#8f6593' }}>
+                  <div className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
                     {deployment.tx_count.toLocaleString()} txs
                   </div>
                 )}
@@ -186,7 +186,7 @@ export function DeploymentList() {
         </div>
 
         {data.deployments.length === 0 && (
-          <div className="text-center py-10 text-sm" style={{ color: '#8f6593' }}>
+          <div className="text-center py-10 text-sm" style={{ color: 'var(--color-dim)' }}>
             No projects found in this category.
           </div>
         )}
@@ -197,7 +197,7 @@ export function DeploymentList() {
         className="px-6 py-4 border-t text-center"
         style={{ borderColor: 'rgba(174, 164, 191, 0.08)' }}
       >
-        <p className="text-xs font-mono" style={{ color: '#8f6593' }}>
+        <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
           {data.count} projects tracked by Bunny Intel
         </p>
       </div>
@@ -214,7 +214,7 @@ function FilterButton({
       className="px-3.5 py-1.5 rounded-md text-xs font-medium transition-all duration-150"
       style={{
         backgroundColor: active ? 'var(--color-accent)' : 'rgba(174, 164, 191, 0.08)',
-        color: active ? 'var(--color-bg)' : '#aea4bf',
+        color: active ? 'var(--color-bg)' : 'var(--color-muted)',
         border: active ? 'none' : '1px solid rgba(174, 164, 191, 0.15)',
       }}
     >

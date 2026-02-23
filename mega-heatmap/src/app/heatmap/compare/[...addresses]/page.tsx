@@ -40,10 +40,10 @@ export default function ComparePage() {
     return (
       <div className="min-h-screen py-12">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 text-center">
-          <h1 className="text-2xl font-bold mb-3" style={{ color: "#f5f8de" }}>
+          <h1 className="text-2xl font-bold mb-3" style={{ color: "var(--color-text)" }}>
             Compare Two Heatmaps
           </h1>
-          <p className="text-sm mb-8" style={{ color: "#aea4bf" }}>
+          <p className="text-sm mb-8" style={{ color: "var(--color-muted)" }}>
             Enter two wallet addresses to compare their MegaETH activity
           </p>
           <CompareSearch />
@@ -76,8 +76,8 @@ export default function ComparePage() {
         >
           <Link
             href="/heatmap"
-            className="inline-flex items-center text-sm transition-colors hover:text-[#f5f8de]"
-            style={{ color: "#8f6593" }}
+            className="inline-flex items-center text-sm transition-colors hover:text-[var(--color-text)]"
+            style={{ color: "var(--color-dim)" }}
           >
             <ArrowLeft className="w-4 h-4 mr-1.5" />
             Back to Heatmap
@@ -96,7 +96,7 @@ function CompareSearch() {
       <div className="space-y-4">
         {["First Address", "Second Address"].map((label, i) => (
           <div key={label}>
-            <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "#aea4bf" }}>
+            <label className="block text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--color-muted)" }}>
               {label}
             </label>
             <input
@@ -109,7 +109,7 @@ function CompareSearch() {
 
         <div
           className="text-center text-sm font-semibold py-1"
-          style={{ color: "#8f6593" }}
+          style={{ color: "var(--color-dim)" }}
         >
           vs
         </div>

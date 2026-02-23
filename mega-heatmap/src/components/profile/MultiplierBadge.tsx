@@ -32,7 +32,7 @@ export function MultiplierBadge({
           backgroundColor: active
             ? 'rgba(132, 226, 150, 0.12)'
             : 'rgba(174, 164, 191, 0.08)',
-          color: active ? '#84e296' : '#8f6593',
+          color: active ? 'var(--color-accent)' : 'var(--color-dim)',
           border: `1px solid ${active ? 'rgba(132, 226, 150, 0.3)' : 'rgba(174, 164, 191, 0.15)'}`,
         }}
       >
@@ -41,7 +41,7 @@ export function MultiplierBadge({
         {active && (
           <span
             className="font-mono font-bold text-[10px]"
-            style={{ color: '#84e296' }}
+            style={{ color: 'var(--color-accent)' }}
           >
             {multiplier}
           </span>
@@ -59,7 +59,7 @@ export function MultiplierBadge({
             className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-xs rounded-lg whitespace-nowrap z-20 shadow-lg"
             style={{
               backgroundColor: '#2d1b22',
-              color: '#aea4bf',
+              color: 'var(--color-muted)',
               border: '1px solid rgba(174, 164, 191, 0.2)',
             }}
           >

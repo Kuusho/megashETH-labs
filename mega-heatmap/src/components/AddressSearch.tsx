@@ -64,7 +64,7 @@ export function AddressSearch({
           {/* Search icon */}
           <div
             className="absolute left-3.5 pointer-events-none"
-            style={{ color: "#8f6593" }}
+            style={{ color: "var(--color-dim)" }}
           >
             <Search className="w-4 h-4" />
           </div>
@@ -112,7 +112,7 @@ export function AddressSearch({
               type="button"
               onClick={handleClear}
               className="absolute right-20 p-1 rounded transition-opacity hover:opacity-60"
-              style={{ color: "#8f6593" }}
+              style={{ color: "var(--color-dim)" }}
               aria-label="Clear"
             >
               <X className="w-3.5 h-3.5" />

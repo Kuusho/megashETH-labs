@@ -29,7 +29,7 @@ export function CategoryFilter({ selected, onChange }: CategoryFilterProps) {
         name="All"
         icon={LayoutGrid}
         count={totalCount}
-        color="#84e296"
+        color="var(--color-accent)"
         isSelected={selected === "all"}
         onClick={() => onChange("all")}
       />
@@ -76,7 +76,7 @@ function CategoryButton({ id, name, icon: Icon, count, color, isSelected, onClic
           }
           : {
             backgroundColor: "rgba(174, 164, 191, 0.06)",
-            color: "#aea4bf",
+            color: "var(--color-muted)",
             borderColor: "rgba(174, 164, 191, 0.15)",
           }
       }
@@ -91,7 +91,7 @@ function CategoryButton({ id, name, icon: Icon, count, color, isSelected, onClic
           backgroundColor: isSelected
             ? "rgba(255,255,255,0.15)"
             : "rgba(174, 164, 191, 0.1)",
-          color: isSelected ? color : "#8f6593",
+          color: isSelected ? color : "var(--color-dim)",
         }}
       >
         {count}
@@ -117,7 +117,7 @@ export function CategoryFilterSidebar({ selected, onChange }: CategoryFilterProp
         <h3
 
           className="px-3 text-[10px] font-semibold uppercase tracking-wider"
-          style={{ color: "#8f6593" }}
+          style={{ color: "var(--color-dim)" }}
         >
           Categories
         </h3>
@@ -151,7 +151,7 @@ function SidebarItem({ name, count, color, isSelected, onClick }: SidebarItemPro
       className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors duration-150"
       style={{
         backgroundColor: isSelected ? "rgba(132, 226, 150, 0.08)" : "transparent",
-        color: isSelected ? "#84e296" : "#aea4bf",
+        color: isSelected ? "var(--color-accent)" : "var(--color-muted)",
       }}
     >
       <div className="flex items-center gap-2">
@@ -160,7 +160,7 @@ function SidebarItem({ name, count, color, isSelected, onClick }: SidebarItemPro
         )}
         <span className={isSelected ? "font-medium" : ""}>{name}</span>
       </div>
-      <span className="text-xs font-mono" style={{ color: isSelected ? "#84e296" : "#8f6593" }}>
+      <span className="text-xs font-mono" style={{ color: isSelected ? "var(--color-accent)" : "var(--color-dim)" }}>
         {count}
       </span>
     </button>

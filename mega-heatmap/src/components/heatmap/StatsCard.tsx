@@ -44,7 +44,7 @@ export function StatsCard({
           <p className="stat-label">{label}</p>
           <p className="stat-value mt-1">{value}</p>
           {subtext && (
-            <p className="text-xs mt-1" style={{ color: '#8f6593' }}>{subtext}</p>
+            <p className="text-xs mt-1" style={{ color: 'var(--color-dim)' }}>{subtext}</p>
           )}
         </div>
         <div
@@ -53,7 +53,7 @@ export function StatsCard({
             backgroundColor: highlight
               ? 'rgba(132, 226, 150, 0.12)'
               : 'rgba(174, 164, 191, 0.1)',
-            color: highlight ? '#84e296' : '#8f6593',
+            color: highlight ? 'var(--color-accent)' : 'var(--color-dim)',
           }}
         >
           <Icon className="w-5 h-5" />
@@ -64,11 +64,11 @@ export function StatsCard({
         <div className="mt-4 flex items-center gap-1">
           <span
             className="text-xs font-medium"
-            style={{ color: trend.isPositive ? '#84e296' : 'var(--color-error)' }}
+            style={{ color: trend.isPositive ? 'var(--color-accent)' : 'var(--color-error)' }}
           >
             {trend.isPositive ? '+' : ''}{trend.value}%
           </span>
-          <span className="text-xs" style={{ color: '#8f6593' }}>vs last week</span>
+          <span className="text-xs" style={{ color: 'var(--color-dim)' }}>vs last week</span>
         </div>
       )}
     </motion.div>

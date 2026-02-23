@@ -34,16 +34,16 @@ export function Footer() {
                 style={{
                   backgroundColor: "rgba(132, 226, 150, 0.12)",
                   border: "1px solid rgba(132, 226, 150, 0.3)",
-                  color: "#84e296",
+                  color: "var(--color-accent)",
                 }}
               >
                 BI
               </div>
-              <span className="text-sm font-bold" style={{ color: "#f5f8de" }}>
+              <span className="text-sm font-bold" style={{ color: "var(--color-text)" }}>
                 Bunny Intel
               </span>
             </Link>
-            <p className="text-sm leading-relaxed" style={{ color: "#8f6593" }}>
+            <p className="text-sm leading-relaxed" style={{ color: "var(--color-dim)" }}>
               Onchain analytics for the MegaETH ecosystem.
             </p>
           </div>
@@ -52,7 +52,7 @@ export function Footer() {
           <div>
             <h3
               className="text-xs font-semibold uppercase tracking-wider mb-4"
-              style={{ color: "#aea4bf" }}
+              style={{ color: "var(--color-muted)" }}
             >
               Product
             </h3>
@@ -61,8 +61,8 @@ export function Footer() {
                 <li key={link.name}>
                   <Link
                     href={link.href}
-                    className="text-sm transition-colors duration-150 hover:text-[#f5f8de]"
-                    style={{ color: "#8f6593" }}
+                    className="text-sm transition-colors duration-150 hover:text-[var(--color-text)]"
+                    style={{ color: "var(--color-dim)" }}
                   >
                     {link.name}
                   </Link>
@@ -75,7 +75,7 @@ export function Footer() {
           <div>
             <h3
               className="text-xs font-semibold uppercase tracking-wider mb-4"
-              style={{ color: "#aea4bf" }}
+              style={{ color: "var(--color-muted)" }}
             >
               Resources
             </h3>
@@ -88,8 +88,8 @@ export function Footer() {
                       target: "_blank",
                       rel: "noopener noreferrer",
                     })}
-                    className="text-sm transition-colors duration-150 hover:text-[#f5f8de]"
-                    style={{ color: "#8f6593" }}
+                    className="text-sm transition-colors duration-150 hover:text-[var(--color-text)]"
+                    style={{ color: "var(--color-dim)" }}
                   >
                     {link.name}
                   </Link>
@@ -102,7 +102,7 @@ export function Footer() {
           <div>
             <h3
               className="text-xs font-semibold uppercase tracking-wider mb-4"
-              style={{ color: "#aea4bf" }}
+              style={{ color: "var(--color-muted)" }}
             >
               Connect
             </h3>
@@ -114,9 +114,9 @@ export function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={link.name}
-                  className="p-2 rounded-md transition-colors duration-150 hover:text-[#f5f8de]"
+                  className="p-2 rounded-md transition-colors duration-150 hover:text-[var(--color-text)]"
                   style={{
-                    color: "#8f6593",
+                    color: "var(--color-dim)",
                     border: "1px solid rgba(174, 164, 191, 0.15)",
                   }}
                 >
@@ -132,17 +132,17 @@ export function Footer() {
           className="py-5 border-t flex flex-col sm:flex-row justify-between items-center gap-3"
           style={{ borderColor: "rgba(174, 164, 191, 0.08)" }}
         >
-          <p className="text-xs font-mono" style={{ color: "#8f6593" }}>
+          <p className="text-xs font-mono" style={{ color: "var(--color-dim)" }}>
             © 2025 Bunny Intel. Built for the MegaETH ecosystem.
           </p>
-          <p className="text-xs" style={{ color: "#8f6593" }}>
+          <p className="text-xs" style={{ color: "var(--color-dim)" }}>
             Powered by{" "}
             <Link
               href="https://megaeth.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-[#84e296] transition-colors duration-150"
-              style={{ color: "#aea4bf" }}
+              className="hover:text-[var(--color-accent)] transition-colors duration-150"
+              style={{ color: "var(--color-muted)" }}
             >
               MegaETH
             </Link>

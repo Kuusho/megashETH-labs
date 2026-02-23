@@ -129,8 +129,8 @@ export function HeatmapComparison({
         className="card p-6 text-center"
       >
         <div className="flex items-center justify-center gap-2 mb-6">
-          <Swords className="w-4 h-4" style={{ color: '#8f6593' }} />
-          <h2 className="text-xl font-bold" style={{ color: '#f5f8de' }}>
+          <Swords className="w-4 h-4" style={{ color: 'var(--color-dim)' }} />
+          <h2 className="text-xl font-bold" style={{ color: 'var(--color-text)' }}>
             Head to Head
           </h2>
         </div>
@@ -138,26 +138,26 @@ export function HeatmapComparison({
         <div className="flex items-center justify-center gap-10">
           <div className="text-center">
             <UserAvatar user={userA} size="lg" />
-            <p className="mt-2 text-sm font-medium" style={{ color: '#f5f8de' }}>
+            <p className="mt-2 text-sm font-medium" style={{ color: 'var(--color-text)' }}>
               {userA.username || formatAddress(userA.address)}
             </p>
-            <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#84e296' }}>
+            <p className="text-3xl font-bold font-mono mt-1" style={{ color: 'var(--color-accent)' }}>
               {winsA}
             </p>
-            <p className="text-xs" style={{ color: '#8f6593' }}>wins</p>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>wins</p>
           </div>
 
-          <div className="text-2xl font-bold" style={{ color: '#8f6593' }}>vs</div>
+          <div className="text-2xl font-bold" style={{ color: 'var(--color-dim)' }}>vs</div>
 
           <div className="text-center">
             <UserAvatar user={userB} size="lg" />
-            <p className="mt-2 text-sm font-medium" style={{ color: '#f5f8de' }}>
+            <p className="mt-2 text-sm font-medium" style={{ color: 'var(--color-text)' }}>
               {userB.username || formatAddress(userB.address)}
             </p>
-            <p className="text-3xl font-bold font-mono mt-1" style={{ color: '#84e296' }}>
+            <p className="text-3xl font-bold font-mono mt-1" style={{ color: 'var(--color-accent)' }}>
               {winsB}
             </p>
-            <p className="text-xs" style={{ color: '#8f6593' }}>wins</p>
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>wins</p>
           </div>
         </div>
       </motion.div>
@@ -176,10 +176,10 @@ export function HeatmapComparison({
               <div className="flex items-center gap-3 mb-4">
                 <UserAvatar user={user} size="sm" />
                 <div>
-                  <p className="text-sm font-medium" style={{ color: '#f5f8de' }}>
+                  <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
                     {user.username || formatAddress(user.address)}
                   </p>
-                  <p className="text-xs font-mono" style={{ color: '#8f6593' }}>
+                  <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
                     {stats.totalTxs.toLocaleString()} transactions
                   </p>
                 </div>
@@ -199,7 +199,7 @@ export function HeatmapComparison({
         transition={{ delay: 0.2 }}
         className="card p-6"
       >
-        <h3 className="text-sm font-semibold uppercase tracking-wider mb-5" style={{ color: '#8f6593' }}>
+        <h3 className="text-sm font-semibold uppercase tracking-wider mb-5" style={{ color: 'var(--color-dim)' }}>
           Stats Breakdown
         </h3>
         <div className="space-y-5">
@@ -259,9 +259,9 @@ function UserAvatar({ user, size = "md" }: { user: User; size?: "sm" | "md" | "l
   }
 
   const colorPairs = [
-    { bg: 'rgba(132, 226, 150, 0.2)', text: '#84e296' },
-    { bg: 'rgba(174, 164, 191, 0.2)', text: '#aea4bf' },
-    { bg: 'rgba(143, 101, 147, 0.2)', text: '#8f6593' },
+    { bg: 'rgba(132, 226, 150, 0.2)', text: 'var(--color-accent)' },
+    { bg: 'rgba(174, 164, 191, 0.2)', text: 'var(--color-muted)' },
+    { bg: 'rgba(143, 101, 147, 0.2)', text: 'var(--color-dim)' },
     { bg: 'rgba(232, 195, 122, 0.2)', text: '#e8c37a' },
   ];
   const pair = colorPairs[parseInt(user.address.slice(-1), 16) % colorPairs.length];
@@ -298,8 +298,8 @@ function ComparisonBar({
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay }}>
       <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-3.5 h-3.5" style={{ color: '#8f6593' }} />
-        <span className="text-xs font-medium" style={{ color: '#aea4bf' }}>
+        <Icon className="w-3.5 h-3.5" style={{ color: 'var(--color-dim)' }} />
+        <span className="text-xs font-medium" style={{ color: 'var(--color-muted)' }}>
           {metric.label}
         </span>
       </div>
@@ -309,7 +309,7 @@ function ComparisonBar({
         <div className="w-20 text-right">
           <span
             className="text-sm font-semibold font-mono"
-            style={{ color: metric.winner === "a" ? '#84e296' : '#8f6593' }}
+            style={{ color: metric.winner === "a" ? 'var(--color-accent)' : 'var(--color-dim)' }}
           >
             {format(metric.valueA)}
           </span>
@@ -321,14 +321,14 @@ function ComparisonBar({
           style={{ backgroundColor: 'rgba(174, 164, 191, 0.1)' }}
         >
           <motion.div
-            style={{ backgroundColor: metric.winner === "a" ? '#84e296' : '#8f6593' }}
+            style={{ backgroundColor: metric.winner === "a" ? 'var(--color-accent)' : 'var(--color-dim)' }}
             initial={{ width: 0 }}
             animate={{ width: `${percentA}%` }}
             transition={{ delay: delay + 0.1, duration: 0.5, ease: "easeOut" }}
             className="h-full"
           />
           <motion.div
-            style={{ backgroundColor: metric.winner === "b" ? '#84e296' : '#8f6593', opacity: 0.5 }}
+            style={{ backgroundColor: metric.winner === "b" ? 'var(--color-accent)' : 'var(--color-dim)', opacity: 0.5 }}
             initial={{ width: 0 }}
             animate={{ width: `${percentB}%` }}
             transition={{ delay: delay + 0.1, duration: 0.5, ease: "easeOut" }}
@@ -340,7 +340,7 @@ function ComparisonBar({
         <div className="w-20">
           <span
             className="text-sm font-semibold font-mono"
-            style={{ color: metric.winner === "b" ? '#84e296' : '#8f6593' }}
+            style={{ color: metric.winner === "b" ? 'var(--color-accent)' : 'var(--color-dim)' }}
           >
             {format(metric.valueB)}
           </span>

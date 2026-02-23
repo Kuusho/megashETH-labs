@@ -12,10 +12,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { DatabaseSync } from 'node:sqlite';
 import path from 'path';
+import { PROJECTS } from '@/data/catalogue';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
-const CACHE_TTL_SECONDS = 1800; // 30 minutes
+const CACHE_TTL_SECONDS = 300; // 5 minutes
+
+// ─── Catalogue Lookup ────────────────────────────────────────────────────────
+
+// Map: lowercase twitter handle → { description, featured }
+// catalogue.ts stores twitter without @; DB project field may have @
+const catalogueMap = new Map(
+  PROJECTS.map(p => [p.twitter.toLowerCase(), { description: p.description, featured: p.featured ?? false }])
+);
 const MAX_LIMIT = 100;
 const DEFAULT_LIMIT = 20;
 
@@ -166,6 +175,15 @@ export async function GET(request: NextRequest) {
         classification: d.classification,
         twitter: extractTwitterHandle(d.url),
         deployed_at: d.created_at,
+        ...(() => {
+          // Normalise the stored handle: strip leading @, lowercase
+          const handle = d.project.replace(/^@/, '').toLowerCase();
+          const meta = catalogueMap.get(handle);
+          return {
+            description: meta?.description ?? null,
+            featured: meta?.featured ?? false,
+          };
+        })(),
       })),
       updated_at: new Date().toISOString(),
     });

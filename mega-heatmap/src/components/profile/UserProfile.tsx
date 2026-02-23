@@ -76,7 +76,7 @@ export function UserProfile() {
         animate={{ opacity: 1, y: 0 }}
         className="card p-8 text-center"
       >
-        <p className="text-sm" style={{ color: '#aea4bf' }}>
+        <p className="text-sm" style={{ color: 'var(--color-muted)' }}>
           Connect your wallet to see your MegaETH activity.
         </p>
       </motion.div>
@@ -87,8 +87,8 @@ export function UserProfile() {
     return (
       <div className="card p-8">
         <div className="flex items-center justify-center gap-3">
-          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: '#84e296' }} />
-          <p className="text-sm" style={{ color: '#aea4bf' }}>Loading your activity...</p>
+          <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading your activity...</p>
         </div>
       </div>
     );
@@ -131,13 +131,13 @@ export function UserProfile() {
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
-        <h2 className="text-lg font-bold" style={{ color: '#f5f8de' }}>Your MegaETH Activity</h2>
+        <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Your MegaETH Activity</h2>
         <button
           onClick={fetchUserData}
           className="p-1.5 rounded-md transition-colors hover:bg-[rgba(174,164,191,0.08)]"
           title="Refresh"
         >
-          <RefreshCw className="w-4 h-4" style={{ color: '#8f6593' }} />
+          <RefreshCw className="w-4 h-4" style={{ color: 'var(--color-dim)' }} />
         </button>
       </div>
 
@@ -154,11 +154,11 @@ export function UserProfile() {
               key={label}
               className="card-elevated p-4 rounded-lg"
             >
-              <Icon className="w-4 h-4 mb-3" style={{ color: '#84e296' }} />
-              <div className="text-xl font-bold font-mono tabular-nums mb-0.5" style={{ color: '#f5f8de' }}>
+              <Icon className="w-4 h-4 mb-3" style={{ color: 'var(--color-accent)' }} />
+              <div className="text-xl font-bold font-mono tabular-nums mb-0.5" style={{ color: 'var(--color-text)' }}>
                 {value}
               </div>
-              <div className="text-xs" style={{ color: '#8f6593' }}>{label}</div>
+              <div className="text-xs" style={{ color: 'var(--color-dim)' }}>{label}</div>
             </div>
           ))}
         </div>
@@ -171,24 +171,24 @@ export function UserProfile() {
             border: '1px solid rgba(132, 226, 150, 0.15)',
           }}
         >
-          <div className="text-5xl font-bold font-mono tabular-nums mb-2" style={{ color: '#84e296' }}>
+          <div className="text-5xl font-bold font-mono tabular-nums mb-2" style={{ color: 'var(--color-accent)' }}>
             {data.score.megaeth_native_score.toLocaleString()}
           </div>
-          <div className="text-xs uppercase tracking-wider mb-4" style={{ color: '#8f6593' }}>
+          <div className="text-xs uppercase tracking-wider mb-4" style={{ color: 'var(--color-dim)' }}>
             MegaETH Native Score
           </div>
           {data.score.rank && (
             <div className="flex items-center justify-center gap-6 text-sm">
               <div>
-                <span style={{ color: '#aea4bf' }}>Rank </span>
-                <span className="font-mono font-semibold" style={{ color: '#f5f8de' }}>
+                <span style={{ color: 'var(--color-muted)' }}>Rank </span>
+                <span className="font-mono font-semibold" style={{ color: 'var(--color-text)' }}>
                   #{data.score.rank.toLocaleString()}
                 </span>
-                <span style={{ color: '#8f6593' }}> / {data.score.total_users.toLocaleString()}</span>
+                <span style={{ color: 'var(--color-dim)' }}> / {data.score.total_users.toLocaleString()}</span>
               </div>
               <div>
-                <span style={{ color: '#aea4bf' }}>Top </span>
-                <span className="font-mono font-semibold" style={{ color: '#84e296' }}>
+                <span style={{ color: 'var(--color-muted)' }}>Top </span>
+                <span className="font-mono font-semibold" style={{ color: 'var(--color-accent)' }}>
                   {(100 - data.score.percentile).toFixed(1)}%
                 </span>
               </div>
@@ -200,7 +200,7 @@ export function UserProfile() {
         <div>
           <h3
             className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: '#8f6593' }}
+            style={{ color: 'var(--color-dim)' }}
           >
             Active Multipliers
           </h3>
@@ -235,10 +235,10 @@ export function UserProfile() {
         className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2"
         style={{ borderColor: 'rgba(174, 164, 191, 0.1)' }}
       >
-        <p className="text-xs" style={{ color: '#8f6593' }}>
+        <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
           Points update daily. Keep building.
         </p>
-        <p className="text-xs font-mono" style={{ color: '#8f6593' }}>
+        <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
           Updated {new Date(data.last_updated).toLocaleString()}
         </p>
       </div>

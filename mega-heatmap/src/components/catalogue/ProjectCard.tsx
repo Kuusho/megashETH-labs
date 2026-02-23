@@ -30,7 +30,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           <div className="flex items-center gap-2 mb-2">
             <h3
               className="text-sm font-semibold truncate"
-              style={{ color: '#f5f8de' }}
+              style={{ color: 'var(--color-text)' }}
             >
               {project.name}
             </h3>
@@ -45,7 +45,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
           {/* Description */}
           <p
             className="text-xs line-clamp-2 mb-3 leading-relaxed"
-            style={{ color: '#8f6593' }}
+            style={{ color: 'var(--color-dim)' }}
           >
             {project.description}
           </p>
@@ -66,7 +66,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
             )}
             <span
               className="flex items-center gap-1 text-[10px] font-mono"
-              style={{ color: '#8f6593' }}
+              style={{ color: 'var(--color-dim)' }}
             >
               <Twitter className="w-3 h-3" />
               @{project.twitter}
@@ -77,7 +77,7 @@ export function ProjectCard({ project, index = 0 }: ProjectCardProps) {
         {/* Arrow */}
         <ExternalLink
           className="w-4 h-4 flex-shrink-0 transition-colors"
-          style={{ color: '#8f6593' }}
+          style={{ color: 'var(--color-dim)' }}
         />
       </div>
     </motion.a>
@@ -104,7 +104,7 @@ export function ProjectCardCompact({ project, index = 0 }: ProjectCardProps) {
         borderColor: 'var(--color-border)',
       }}
       onMouseEnter={(e) => {
-        (e.currentTarget as HTMLElement).style.borderColor = '#84e296';
+        (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-accent)';
       }}
       onMouseLeave={(e) => {
         (e.currentTarget as HTMLElement).style.borderColor = 'var(--color-border)';
@@ -114,8 +114,8 @@ export function ProjectCardCompact({ project, index = 0 }: ProjectCardProps) {
         <div
           className="w-7 h-7 rounded flex items-center justify-center font-bold text-[10px] font-mono flex-shrink-0"
           style={{
-            backgroundColor: `${category?.color ?? '#8f6593'}15`,
-            color: category?.color ?? '#8f6593',
+            backgroundColor: `${category?.color ?? 'var(--color-dim)'}15`,
+            color: category?.color ?? 'var(--color-dim)',
           }}
         >
           {project.name.slice(0, 2).toUpperCase()}
@@ -123,11 +123,11 @@ export function ProjectCardCompact({ project, index = 0 }: ProjectCardProps) {
         <div className="flex-1 min-w-0">
           <h3
             className="text-sm font-medium truncate"
-            style={{ color: '#f5f8de' }}
+            style={{ color: 'var(--color-text)' }}
           >
             {project.name}
           </h3>
-          <p className="text-[10px] font-mono" style={{ color: '#8f6593' }}>
+          <p className="text-[10px] font-mono" style={{ color: 'var(--color-dim)' }}>
             @{project.twitter}
           </p>
         </div>
@@ -140,7 +140,7 @@ export function ProjectCardCompact({ project, index = 0 }: ProjectCardProps) {
       </div>
       <p
         className="text-xs line-clamp-2 leading-relaxed"
-        style={{ color: '#8f6593' }}
+        style={{ color: 'var(--color-dim)' }}
       >
         {project.description}
       </p>
