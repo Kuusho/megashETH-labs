@@ -1,8 +1,9 @@
 /**
  * Profile API
  *
- * GET  /api/profile?address=0x...  → fetch profile + all wallets + combinedScore
- * POST /api/profile                → create profile (verify timestamp + sig)
+ * GET   /api/profile?address=0x...  → fetch profile + wallets + combinedScore
+ * POST  /api/profile                → create profile (verify timestamp + sig)
+ * PATCH /api/profile                → update displayName / twitter
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -17,7 +18,6 @@ const SIG_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-/** Extract the ISO timestamp embedded in the signed message */
 function parseTimestampFromMessage(message: string): Date | null {
   const match = message.match(/Timestamp:\s*(.+)$/m);
   if (!match) return null;
@@ -25,7 +25,6 @@ function parseTimestampFromMessage(message: string): Date | null {
   return isNaN(d.getTime()) ? null : d;
 }
 
-/** Normalize address to lowercase */
 function normalizeAddress(addr: string): string {
   return addr.toLowerCase();
 }
@@ -41,7 +40,6 @@ export async function GET(request: NextRequest) {
 
   const normalizedAddress = normalizeAddress(address);
 
-  // Find wallet row
   const walletRows = await db
     .select()
     .from(profileWallets)
@@ -53,7 +51,6 @@ export async function GET(request: NextRequest) {
 
   const profileId = walletRows[0].profileId;
 
-  // Fetch the profile
   const profileRows = await db
     .select()
     .from(userProfiles)
@@ -65,7 +62,6 @@ export async function GET(request: NextRequest) {
 
   const profile = profileRows[0];
 
-  // Fetch all wallets for this profile
   const allWallets = await db
     .select()
     .from(profileWallets)
@@ -73,18 +69,15 @@ export async function GET(request: NextRequest) {
 
   const walletAddresses = allWallets.map(w => w.address);
 
-  // Compute combined score from userActivity
   let combinedScore = 0;
   if (walletAddresses.length > 0) {
     const scoreResult = await db
       .select({ total: sum(userActivity.megaethNativeScore) })
       .from(userActivity)
       .where(inArray(userActivity.address, walletAddresses));
-
     combinedScore = Number(scoreResult[0]?.total ?? 0);
   }
 
-  // Fetch individual scores per wallet
   const activityRows = walletAddresses.length > 0
     ? await db
         .select({ address: userActivity.address, score: userActivity.megaethNativeScore })
@@ -99,6 +92,7 @@ export async function GET(request: NextRequest) {
       id: profile.id,
       primaryAddress: profile.primaryAddress,
       displayName: profile.displayName,
+      twitter: profile.twitter,
       createdAt: profile.createdAt,
     },
     wallets: allWallets.map(w => ({
@@ -120,6 +114,7 @@ export async function POST(request: NextRequest) {
     signature: string;
     message: string;
     displayName?: string;
+    twitter?: string;
   };
 
   try {
@@ -128,17 +123,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { profileId, address, signature, message, displayName } = body;
+  const { profileId, address, signature, message, displayName, twitter } = body;
 
   if (!profileId || !address || !signature || !message) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+  }
+
+  if (!displayName?.trim()) {
+    return NextResponse.json({ error: 'Display name is required' }, { status: 400 });
   }
 
   if (!/^0x[a-fA-F0-9]{40}$/.test(address)) {
     return NextResponse.json({ error: 'Invalid address format' }, { status: 400 });
   }
 
-  // 1. Timestamp check — reject if > 5 min old
+  // Timestamp check
   const timestamp = parseTimestampFromMessage(message);
   if (!timestamp) {
     return NextResponse.json({ error: 'Cannot parse timestamp from message' }, { status: 400 });
@@ -147,7 +146,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Signature expired — please re-sign' }, { status: 400 });
   }
 
-  // 2. Signature verification
+  // Signature verification
   try {
     const recovered = await recoverMessageAddress({
       message,
@@ -162,7 +161,6 @@ export async function POST(request: NextRequest) {
 
   const normalizedAddress = normalizeAddress(address);
 
-  // 3. Check address not already in any profile
   const existing = await db
     .select()
     .from(profileWallets)
@@ -174,11 +172,11 @@ export async function POST(request: NextRequest) {
 
   const now = Math.floor(Date.now() / 1000);
 
-  // 4. Insert profile + primary wallet (transaction)
   await db.insert(userProfiles).values({
     id: profileId,
     primaryAddress: normalizedAddress,
-    displayName: displayName ?? null,
+    displayName: displayName.trim(),
+    twitter: twitter?.trim() || null,
     createdAt: now,
   });
 
@@ -195,17 +193,80 @@ export async function POST(request: NextRequest) {
     profile: {
       id: profileId,
       primaryAddress: normalizedAddress,
-      displayName: displayName ?? null,
+      displayName: displayName.trim(),
+      twitter: twitter?.trim() || null,
       createdAt: now,
     },
-    wallets: [
-      {
-        address: normalizedAddress,
-        isPrimary: true,
-        addedAt: now,
-        score: 0,
-      },
-    ],
+    wallets: [{ address: normalizedAddress, isPrimary: true, addedAt: now, score: 0 }],
     combinedScore: 0,
   }, { status: 201 });
+}
+
+// ─── PATCH /api/profile ───────────────────────────────────────────────────────
+
+export async function PATCH(request: NextRequest) {
+  let body: {
+    address: string;
+    displayName?: string;
+    twitter?: string;
+  };
+
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
+  }
+
+  const { address, displayName, twitter } = body;
+
+  if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
+    return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
+  }
+
+  if (displayName !== undefined && !displayName.trim()) {
+    return NextResponse.json({ error: 'Display name cannot be empty' }, { status: 400 });
+  }
+
+  const normalizedAddress = normalizeAddress(address);
+
+  // Find profile via wallet
+  const walletRows = await db
+    .select()
+    .from(profileWallets)
+    .where(eq(profileWallets.address, normalizedAddress));
+
+  if (walletRows.length === 0) {
+    return NextResponse.json({ error: 'No profile for this address' }, { status: 404 });
+  }
+
+  const profileId = walletRows[0].profileId;
+
+  // Build update payload — only update fields that were passed
+  const updates: { displayName?: string; twitter?: string | null } = {};
+  if (displayName !== undefined) updates.displayName = displayName.trim();
+  if (twitter !== undefined) updates.twitter = twitter.trim() || null;
+
+  if (Object.keys(updates).length === 0) {
+    return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
+  }
+
+  await db
+    .update(userProfiles)
+    .set(updates)
+    .where(eq(userProfiles.id, profileId));
+
+  const updated = await db
+    .select()
+    .from(userProfiles)
+    .where(eq(userProfiles.id, profileId));
+
+  return NextResponse.json({
+    profile: {
+      id: updated[0].id,
+      primaryAddress: updated[0].primaryAddress,
+      displayName: updated[0].displayName,
+      twitter: updated[0].twitter,
+      createdAt: updated[0].createdAt,
+    },
+  });
 }

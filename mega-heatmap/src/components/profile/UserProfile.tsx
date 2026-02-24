@@ -3,28 +3,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
-import { RefreshCw, Award, Zap, Calendar, Flame, Link2, Plus } from 'lucide-react';
+import { RefreshCw, Award, Zap, Calendar, Flame, Link2, Plus, Pencil, Check, X } from 'lucide-react';
 import { MultiplierBadge } from './MultiplierBadge';
-
-// ─── Profile Types ─────────────────────────────────────────────────────────────
-
-interface ProfileWalletInfo {
-  address: string;
-  isPrimary: boolean;
-  addedAt: number;
-  score: number;
-}
-
-interface UserProfileData {
-  profile: {
-    id: string;
-    primaryAddress: string;
-    displayName: string | null;
-    createdAt: number;
-  };
-  wallets: ProfileWalletInfo[];
-  combinedScore: number;
-}
+import { openAddWalletModal } from './ProfileGate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -53,14 +34,40 @@ interface UserData {
   warning?: string;
 }
 
+interface ProfileWalletInfo {
+  address: string;
+  isPrimary: boolean;
+  addedAt: number;
+  score: number;
+}
+
+interface UserProfileData {
+  profile: {
+    id: string;
+    primaryAddress: string;
+    displayName: string | null;
+    twitter: string | null;
+    createdAt: number;
+  };
+  wallets: ProfileWalletInfo[];
+  combinedScore: number;
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () => void }) {
+export function UserProfile() {
   const { address, isConnected } = useAccount();
   const [data, setData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [profileData, setProfileData] = useState<UserProfileData | null>(null);
+
+  // Inline edit state
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editTwitter, setEditTwitter] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchUserData = useCallback(async () => {
     if (!address) return;
@@ -99,6 +106,47 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
     if (isConnected && address) fetchUserData();
     else { setData(null); setError(null); setProfileData(null); }
   }, [address, isConnected, fetchUserData]);
+
+  const startEdit = () => {
+    setEditName(profileData?.profile.displayName ?? '');
+    setEditTwitter(profileData?.profile.twitter ?? '');
+    setSaveError(null);
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setEditing(false);
+    setSaveError(null);
+  };
+
+  const saveEdit = async () => {
+    if (!address || !editName.trim()) {
+      setSaveError('Display name is required');
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const res = await fetch('/api/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, displayName: editName.trim(), twitter: editTwitter.trim() || '' }),
+      });
+      if (!res.ok) {
+        const d = await res.json();
+        throw new Error(d.error ?? 'Save failed');
+      }
+      const updated = await res.json();
+      setProfileData(prev => prev ? { ...prev, profile: { ...prev.profile, ...updated.profile } } : prev);
+      setEditing(false);
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Save failed');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ─── Guard states ──────────────────────────────────────────────────────────
 
   if (!isConnected) {
     return (
@@ -150,6 +198,10 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
     { label: 'Days Active', value: `${data.metrics.days_active} / 14`, icon: Calendar },
   ];
 
+  const displayScore = profileData && profileData.wallets.length > 1
+    ? profileData.combinedScore
+    : data.score.megaeth_native_score;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -162,10 +214,72 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
         className="flex items-center justify-between px-6 py-4 border-b"
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
-        <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Your MegaETH Activity</h2>
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Identity block */}
+          {profileData ? (
+            editing ? (
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                <input
+                  value={editName}
+                  onChange={e => setEditName(e.target.value)}
+                  placeholder="Display name"
+                  className="px-2 py-1 rounded text-sm font-semibold outline-none w-32"
+                  style={{ backgroundColor: 'rgba(174,164,191,0.08)', border: '1px solid rgba(174,164,191,0.2)', color: 'var(--color-text)' }}
+                  autoFocus
+                />
+                <input
+                  value={editTwitter}
+                  onChange={e => setEditTwitter(e.target.value)}
+                  placeholder="@twitter"
+                  className="px-2 py-1 rounded text-xs outline-none w-28"
+                  style={{ backgroundColor: 'rgba(174,164,191,0.08)', border: '1px solid rgba(174,164,191,0.2)', color: 'var(--color-muted)' }}
+                />
+                {saveError && <span className="text-xs" style={{ color: 'var(--color-error)' }}>{saveError}</span>}
+                <button onClick={saveEdit} disabled={saving} className="p-1 rounded" style={{ color: 'var(--color-accent)' }}>
+                  {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                </button>
+                <button onClick={cancelEdit} className="p-1 rounded" style={{ color: 'var(--color-dim)' }}>
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 min-w-0">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-base font-bold truncate" style={{ color: 'var(--color-text)' }}>
+                      {profileData.profile.displayName}
+                    </span>
+                    <button
+                      onClick={startEdit}
+                      className="p-0.5 rounded opacity-40 hover:opacity-100 transition-opacity"
+                      style={{ color: 'var(--color-dim)' }}
+                      title="Edit profile"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                  </div>
+                  {profileData.profile.twitter ? (
+                    <span className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                      {profileData.profile.twitter.startsWith('@')
+                        ? profileData.profile.twitter
+                        : `@${profileData.profile.twitter}`}
+                    </span>
+                  ) : (
+                    <span className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
+                      {address?.slice(0, 8)}...{address?.slice(-6)}
+                    </span>
+                  )}
+                </div>
+              </div>
+            )
+          ) : (
+            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Your MegaETH Activity</h2>
+          )}
+        </div>
+
         <button
           onClick={fetchUserData}
-          className="p-1.5 rounded-md transition-colors hover:bg-[rgba(174,164,191,0.08)]"
+          className="p-1.5 rounded-md transition-colors hover:bg-[rgba(174,164,191,0.08)] shrink-0"
           title="Refresh"
         >
           <RefreshCw className="w-4 h-4" style={{ color: 'var(--color-dim)' }} />
@@ -181,10 +295,7 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
         {/* Metrics grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           {metrics.map(({ label, value, icon: Icon }) => (
-            <div
-              key={label}
-              className="card-elevated p-4 rounded-lg"
-            >
+            <div key={label} className="card-elevated p-4 rounded-lg">
               <Icon className="w-4 h-4 mb-3" style={{ color: 'var(--color-accent)' }} />
               <div className="text-xl font-bold font-mono tabular-nums mb-0.5" style={{ color: 'var(--color-text)' }}>
                 {value}
@@ -197,16 +308,13 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
         {/* Score */}
         <div
           className="p-6 rounded-lg text-center"
-          style={{
-            backgroundColor: 'rgba(132, 226, 150, 0.06)',
-            border: '1px solid rgba(132, 226, 150, 0.15)',
-          }}
+          style={{ backgroundColor: 'rgba(132, 226, 150, 0.06)', border: '1px solid rgba(132, 226, 150, 0.15)' }}
         >
           <div className="text-5xl font-bold font-mono tabular-nums mb-2" style={{ color: 'var(--color-accent)' }}>
-            {data.score.megaeth_native_score.toLocaleString()}
+            {displayScore.toLocaleString()}
           </div>
           <div className="text-xs uppercase tracking-wider mb-4" style={{ color: 'var(--color-dim)' }}>
-            MegaETH Native Score
+            {profileData && profileData.wallets.length > 1 ? 'Combined Score' : 'MegaETH Native Score'}
           </div>
           {data.score.rank && (
             <div className="flex items-center justify-center gap-6 text-sm">
@@ -229,34 +337,13 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
 
         {/* Multiplier badges */}
         <div>
-          <h3
-            className="text-xs font-semibold uppercase tracking-wider mb-3"
-            style={{ color: 'var(--color-dim)' }}
-          >
+          <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-dim)' }}>
             Active Multipliers
           </h3>
           <div className="flex flex-wrap gap-2">
-            <MultiplierBadge
-              active={data.multipliers.og_bonus}
-              label="OG User"
-              description="First tx before or on mainnet launch"
-              multiplier="1.5x"
-              emoji="★"
-            />
-            <MultiplierBadge
-              active={data.multipliers.builder_bonus}
-              label="Builder"
-              description="Deployed at least 1 contract"
-              multiplier="1.2x"
-              emoji="◈"
-            />
-            <MultiplierBadge
-              active={data.multipliers.power_user_bonus}
-              label="Power User"
-              description="Average >50 tx/day"
-              multiplier="1.3x"
-              emoji="⚡"
-            />
+            <MultiplierBadge active={data.multipliers.og_bonus} label="OG User" description="First tx before or on mainnet launch" multiplier="1.5x" emoji="★" />
+            <MultiplierBadge active={data.multipliers.builder_bonus} label="Builder" description="Deployed at least 1 contract" multiplier="1.2x" emoji="◈" />
+            <MultiplierBadge active={data.multipliers.power_user_bonus} label="Power User" description="Average >50 tx/day" multiplier="1.3x" emoji="⚡" />
           </div>
         </div>
 
@@ -270,20 +357,14 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
               <Link2 className="w-3 h-3" />
               Linked Wallets
             </h3>
-            {onOpenProfileModal && (
-              <button
-                onClick={onOpenProfileModal}
-                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
-                style={{
-                  color: 'var(--color-accent)',
-                  backgroundColor: 'rgba(132, 226, 150, 0.08)',
-                  border: '1px solid rgba(132, 226, 150, 0.2)',
-                }}
-              >
-                <Plus className="w-3 h-3" />
-                {profileData ? 'Add wallet' : 'Create profile'}
-              </button>
-            )}
+            <button
+              onClick={openAddWalletModal}
+              className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
+              style={{ color: 'var(--color-accent)', backgroundColor: 'rgba(132, 226, 150, 0.08)', border: '1px solid rgba(132, 226, 150, 0.2)' }}
+            >
+              <Plus className="w-3 h-3" />
+              Add wallet
+            </button>
           </div>
 
           {profileData && profileData.wallets.length > 0 ? (
@@ -292,20 +373,14 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
                 <div
                   key={w.address}
                   className="flex items-center justify-between px-3 py-2 rounded-md"
-                  style={{
-                    backgroundColor: 'rgba(174, 164, 191, 0.04)',
-                    border: '1px solid rgba(174, 164, 191, 0.08)',
-                  }}
+                  style={{ backgroundColor: 'rgba(174, 164, 191, 0.04)', border: '1px solid rgba(174, 164, 191, 0.08)' }}
                 >
                   <div className="flex items-center gap-2 min-w-0">
                     <span className="font-mono text-xs truncate" style={{ color: 'var(--color-muted)' }}>
                       {w.address.slice(0, 8)}...{w.address.slice(-6)}
                     </span>
                     {w.isPrimary && (
-                      <span
-                        className="text-xs px-1.5 py-0.5 rounded shrink-0"
-                        style={{ backgroundColor: 'rgba(132, 226, 150, 0.1)', color: 'var(--color-accent)' }}
-                      >
+                      <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(132,226,150,0.1)', color: 'var(--color-accent)' }}>
                         primary
                       </span>
                     )}
@@ -315,19 +390,12 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
                   </span>
                 </div>
               ))}
-
-              {/* Combined score row */}
               {profileData.wallets.length > 1 && (
                 <div
                   className="flex items-center justify-between px-3 py-2 rounded-md mt-1"
-                  style={{
-                    backgroundColor: 'rgba(132, 226, 150, 0.06)',
-                    border: '1px solid rgba(132, 226, 150, 0.15)',
-                  }}
+                  style={{ backgroundColor: 'rgba(132, 226, 150, 0.06)', border: '1px solid rgba(132, 226, 150, 0.15)' }}
                 >
-                  <span className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
-                    Combined score
-                  </span>
+                  <span className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>Combined score</span>
                   <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
                     {profileData.combinedScore.toLocaleString()} pts
                   </span>
@@ -336,9 +404,7 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
             </div>
           ) : (
             <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-              {profileData
-                ? 'No additional wallets linked.'
-                : 'Create a profile to link multiple wallets and combine your score.'}
+              No additional wallets linked.
             </p>
           )}
         </div>
@@ -349,9 +415,7 @@ export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () =>
         className="px-6 py-4 border-t flex flex-col sm:flex-row items-center justify-between gap-2"
         style={{ borderColor: 'rgba(174, 164, 191, 0.1)' }}
       >
-        <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-          Points update daily. Keep building.
-        </p>
+        <p className="text-xs" style={{ color: 'var(--color-dim)' }}>Points update daily. Keep building.</p>
         <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
           Updated {new Date(data.last_updated).toLocaleString()}
         </p>

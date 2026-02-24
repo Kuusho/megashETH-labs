@@ -8,6 +8,7 @@ import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { LeaderboardProvider } from "@/lib/leaderboard";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { ProfileGate } from "@/components/profile/ProfileGate";
 
 // MegaETH chain configuration (testnet for now)
 const megaeth = {
@@ -84,6 +85,7 @@ export function Providers({ children }: { children: ReactNode }) {
             }}
           >
             <LeaderboardProvider>
+              <ProfileGate />
               {children}
             </LeaderboardProvider>
           </RainbowKitProvider>

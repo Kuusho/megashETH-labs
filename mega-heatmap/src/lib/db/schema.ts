@@ -97,6 +97,7 @@ export const userProfiles = pgTable('user_profiles', {
   id: text('id').primaryKey(),                   // UUID, generated client-side
   primaryAddress: text('primary_address').notNull(),
   displayName: text('display_name'),
+  twitter: text('twitter'),                      // Optional, stored as-is
   createdAt: integer('created_at').notNull(),    // Unix epoch seconds
 });
 

@@ -11,7 +11,7 @@ import { cn, calculateStreak, formatAddress } from "@/lib/utils";
 import { ACTIVE_CHAIN } from "@/lib/chains";
 import type { ResolvedUser } from "@/lib/neynar";
 import { Check, Copy, Image as ImageIcon } from "lucide-react";
-import { UserProfile, ProfileSetupModal, FrequentProjects, useProfileModal } from "@/components/profile";
+import { UserProfile, FrequentProjects } from "@/components/profile";
 
 // Demo data generator (fallback when not connected or no data)
 function generateDemoData(seed: string = "default"): Map<string, number> {
@@ -47,7 +47,6 @@ type LookupMode = "connect" | "lookup";
 
 export default function HeatmapPage() {
   const { address: connectedAddress, isConnected } = useAccount();
-  const profileModal = useProfileModal();
   const [colorScheme, setColorScheme] = useState<"violet" | "fire" | "ocean" | "forest">("violet");
   const [lookupMode, setLookupMode] = useState<LookupMode>("connect");
 
@@ -206,14 +205,6 @@ export default function HeatmapPage() {
 
   return (
     <div className="min-h-screen py-12">
-      {/* Profile setup modal — auto-triggered on first connect */}
-      <ProfileSetupModal
-        open={profileModal.open}
-        onClose={() => profileModal.setOpen(false)}
-        profileId={profileModal.profileId}
-        onProfileCreated={profileModal.onProfileCreated}
-      />
-
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
         {/* Header */}
@@ -423,7 +414,7 @@ export default function HeatmapPage() {
             transition={{ delay: 0.25 }}
             className="mb-8"
           >
-            <UserProfile onOpenProfileModal={() => profileModal.setOpen(true)} />
+            <UserProfile />
           </motion.div>
         )}
 

@@ -5,7 +5,8 @@ import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Flame, LayoutDashboard, Trophy, Rocket } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useAccount } from "wagmi";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
@@ -90,6 +91,72 @@ function NavLink({
   );
 }
 
+// ─── Identity Chip ────────────────────────────────────────────────────────────
+
+function IdentityChip() {
+  const { address, isConnected } = useAccount();
+  const [displayName, setDisplayName] = useState<string | null>(null);
+  const [twitter, setTwitter] = useState<string | null>(null);
+  const checkedRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!isConnected || !address) {
+      setDisplayName(null);
+      setTwitter(null);
+      checkedRef.current = null;
+      return;
+    }
+    if (checkedRef.current === address.toLowerCase()) return;
+    checkedRef.current = address.toLowerCase();
+
+    fetch(`/api/profile?address=${address}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        if (data?.profile) {
+          setDisplayName(data.profile.displayName ?? null);
+          setTwitter(data.profile.twitter ?? null);
+        }
+      })
+      .catch(() => {});
+  }, [address, isConnected]);
+
+  if (!isConnected || !displayName) return null;
+
+  const label = displayName;
+  const sub = twitter
+    ? (twitter.startsWith('@') ? twitter : `@${twitter}`)
+    : null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, scale: 0.92 }}
+      animate={{ opacity: 1, scale: 1 }}
+      className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-md"
+      style={{
+        backgroundColor: 'rgba(132, 226, 150, 0.06)',
+        border: '1px solid rgba(132, 226, 150, 0.18)',
+      }}
+    >
+      <div
+        className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+        style={{ backgroundColor: 'rgba(132,226,150,0.2)', color: 'var(--color-accent)' }}
+      >
+        {label.slice(0, 1).toUpperCase()}
+      </div>
+      <div className="leading-none">
+        <div className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
+          {label}
+        </div>
+        {sub && (
+          <div className="text-[10px] mt-0.5" style={{ color: 'var(--color-dim)' }}>
+            {sub}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
 // ─── Header ──────────────────────────────────────────────────────────────────
 
 export function Header() {
@@ -154,6 +221,7 @@ export function Header() {
           {/* Right side */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
+            <IdentityChip />
             <div className="hidden sm:block">
               <ConnectButton
                 chainStatus="icon"
