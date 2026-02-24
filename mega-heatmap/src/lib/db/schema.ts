@@ -8,7 +8,7 @@
  * Using Drizzle ORM with Vercel Postgres
  */
 
-import { pgTable, text, integer, real, serial, unique, index } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, real, serial, boolean, unique, index } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 
 // ─── User Activity Table ─────────────────────────────────────────────────────
@@ -90,3 +90,42 @@ export interface Multipliers {
   builderBonus: boolean;   // Has deployed contracts
   powerUserBonus: boolean; // Avg > 50 tx/day
 }
+
+// ─── User Profiles Table ─────────────────────────────────────────────────────
+
+export const userProfiles = pgTable('user_profiles', {
+  id: text('id').primaryKey(),                   // UUID, generated client-side
+  primaryAddress: text('primary_address').notNull(),
+  displayName: text('display_name'),
+  createdAt: integer('created_at').notNull(),    // Unix epoch seconds
+});
+
+// ─── Profile Wallets Table ───────────────────────────────────────────────────
+
+export const profileWallets = pgTable(
+  'profile_wallets',
+  {
+    id: serial('id').primaryKey(),
+    profileId: text('profile_id').notNull()
+      .references(() => userProfiles.id, { onDelete: 'cascade' }),
+    address: text('address').notNull().unique(),  // Lowercase normalised
+    isPrimary: boolean('is_primary').default(false),
+    signature: text('signature').notNull(),
+    message: text('message').notNull(),           // Exact signed message
+    addedAt: integer('added_at').notNull(),
+  },
+  (table) => {
+    return {
+      profileIdIdx: index('idx_pw_profile_id').on(table.profileId),
+      addressIdx: index('idx_pw_address').on(table.address),
+    };
+  }
+);
+
+// ─── Profile TypeScript Types ─────────────────────────────────────────────────
+
+export type UserProfile = typeof userProfiles.$inferSelect;
+export type NewUserProfile = typeof userProfiles.$inferInsert;
+
+export type ProfileWallet = typeof profileWallets.$inferSelect;
+export type NewProfileWallet = typeof profileWallets.$inferInsert;

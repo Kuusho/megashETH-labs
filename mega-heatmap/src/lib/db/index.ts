@@ -1,13 +1,17 @@
 /**
- * Database Connection - Vercel Postgres + Drizzle ORM
+ * Database Connection - Supabase + Drizzle ORM
  */
 
-import { drizzle } from 'drizzle-orm/vercel-postgres';
-import { sql as sqlVercel } from '@vercel/postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import postgres from 'postgres';
 import * as schema from './schema';
 
-// Initialize Drizzle with Vercel Postgres
-export const db = drizzle(sqlVercel, { schema });
+const connectionString = process.env.DATABASE_URL!;
+
+// Disable prefetch as it is not supported for "Transaction" pool mode
+const client = postgres(connectionString, { prepare: false });
+
+export const db = drizzle(client, { schema });
 
 // Export schema for use in queries
 export { schema };

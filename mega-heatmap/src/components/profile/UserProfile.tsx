@@ -1,10 +1,30 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useAccount } from 'wagmi';
 import { motion } from 'framer-motion';
-import { RefreshCw, Award, Zap, Calendar, Flame } from 'lucide-react';
+import { RefreshCw, Award, Zap, Calendar, Flame, Link2, Plus } from 'lucide-react';
 import { MultiplierBadge } from './MultiplierBadge';
+
+// ─── Profile Types ─────────────────────────────────────────────────────────────
+
+interface ProfileWalletInfo {
+  address: string;
+  isPrimary: boolean;
+  addedAt: number;
+  score: number;
+}
+
+interface UserProfileData {
+  profile: {
+    id: string;
+    primaryAddress: string;
+    displayName: string | null;
+    createdAt: number;
+  };
+  wallets: ProfileWalletInfo[];
+  combinedScore: number;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,39 +55,50 @@ interface UserData {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function UserProfile() {
+export function UserProfile({ onOpenProfileModal }: { onOpenProfileModal?: () => void }) {
   const { address, isConnected } = useAccount();
   const [data, setData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [profileData, setProfileData] = useState<UserProfileData | null>(null);
 
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     if (!address) return;
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(`/api/user/${address}`);
-      if (!response.ok) {
-        if (response.status === 404) {
+      const [activityRes, profileRes] = await Promise.all([
+        fetch(`/api/user/${address}`),
+        fetch(`/api/profile?address=${address}`),
+      ]);
+
+      if (!activityRes.ok) {
+        if (activityRes.status === 404) {
           setError('No onchain activity found for this address on MegaETH.');
           setData(null);
           return;
         }
-        throw new Error(`HTTP ${response.status}`);
+        throw new Error(`HTTP ${activityRes.status}`);
       }
-      setData(await response.json());
+      setData(await activityRes.json());
+
+      if (profileRes.ok) {
+        setProfileData(await profileRes.json());
+      } else {
+        setProfileData(null);
+      }
     } catch (err) {
       console.error('Failed to fetch user data:', err);
       setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [address]);
 
   useEffect(() => {
     if (isConnected && address) fetchUserData();
-    else { setData(null); setError(null); }
-  }, [address, isConnected]);
+    else { setData(null); setError(null); setProfileData(null); }
+  }, [address, isConnected, fetchUserData]);
 
   if (!isConnected) {
     return (
@@ -227,6 +258,89 @@ export function UserProfile() {
               emoji="⚡"
             />
           </div>
+        </div>
+
+        {/* Linked Wallets */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h3
+              className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5"
+              style={{ color: 'var(--color-dim)' }}
+            >
+              <Link2 className="w-3 h-3" />
+              Linked Wallets
+            </h3>
+            {onOpenProfileModal && (
+              <button
+                onClick={onOpenProfileModal}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
+                style={{
+                  color: 'var(--color-accent)',
+                  backgroundColor: 'rgba(132, 226, 150, 0.08)',
+                  border: '1px solid rgba(132, 226, 150, 0.2)',
+                }}
+              >
+                <Plus className="w-3 h-3" />
+                {profileData ? 'Add wallet' : 'Create profile'}
+              </button>
+            )}
+          </div>
+
+          {profileData && profileData.wallets.length > 0 ? (
+            <div className="space-y-2">
+              {profileData.wallets.map(w => (
+                <div
+                  key={w.address}
+                  className="flex items-center justify-between px-3 py-2 rounded-md"
+                  style={{
+                    backgroundColor: 'rgba(174, 164, 191, 0.04)',
+                    border: '1px solid rgba(174, 164, 191, 0.08)',
+                  }}
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="font-mono text-xs truncate" style={{ color: 'var(--color-muted)' }}>
+                      {w.address.slice(0, 8)}...{w.address.slice(-6)}
+                    </span>
+                    {w.isPrimary && (
+                      <span
+                        className="text-xs px-1.5 py-0.5 rounded shrink-0"
+                        style={{ backgroundColor: 'rgba(132, 226, 150, 0.1)', color: 'var(--color-accent)' }}
+                      >
+                        primary
+                      </span>
+                    )}
+                  </div>
+                  <span className="font-mono text-xs shrink-0 ml-3" style={{ color: 'var(--color-dim)' }}>
+                    {w.score.toLocaleString()} pts
+                  </span>
+                </div>
+              ))}
+
+              {/* Combined score row */}
+              {profileData.wallets.length > 1 && (
+                <div
+                  className="flex items-center justify-between px-3 py-2 rounded-md mt-1"
+                  style={{
+                    backgroundColor: 'rgba(132, 226, 150, 0.06)',
+                    border: '1px solid rgba(132, 226, 150, 0.15)',
+                  }}
+                >
+                  <span className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>
+                    Combined score
+                  </span>
+                  <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
+                    {profileData.combinedScore.toLocaleString()} pts
+                  </span>
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+              {profileData
+                ? 'No additional wallets linked.'
+                : 'Create a profile to link multiple wallets and combine your score.'}
+            </p>
+          )}
         </div>
       </div>
 
