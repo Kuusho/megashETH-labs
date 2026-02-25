@@ -197,8 +197,10 @@ export async function GET(
         farcaster: externalData.hasFarcaster,
       },
       nft_holdings: {
-        protardio: externalData.holdsProtardio,
+        protardio: (externalData.protardioCount ?? 0) > 0,
+        protardio_count: externalData.protardioCount ?? 0,
         native_nft: externalData.holdsNativeNft,
+        native_nft_count: externalData.nativeNftCount ?? 0,
         collections: externalData.nftHoldings?.length ?? 0,
       },
       last_updated: new Date(user.lastUpdated * 1000).toISOString(),

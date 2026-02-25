@@ -86,15 +86,21 @@ export interface UserScore {
 }
 
 export interface Multipliers {
+  // Activity
   ogBonus: boolean;        // First tx before mainnet launch
   builderBonus: boolean;   // Has deployed contracts
   powerUserBonus: boolean; // Avg > 50 tx/day
-  // Identity multipliers
+  // Identity
   megaDomainBonus: boolean;   // Owns a .mega domain
   farcasterBonus: boolean;    // Has linked Farcaster account
-  // NFT collection multipliers (MegaETH native)
-  protardioBonus: boolean;    // Holds Protardio NFT
-  nativeNftBonus: boolean;    // Holds any MegaETH native NFT collection
+  agentBonus: boolean;        // ERC-8004 registered agent or operator
+  // Protardio (count-based)
+  protardioBonus: boolean;       // true if holding ≥1
+  protardioCount: number;        // total held
+  protardioAllUnlisted: boolean; // true if none are listed on a marketplace
+  // Native NFT (additive, capped at 2 collections)
+  nativeNftBonus: boolean;
+  nativeNftCount: number;        // distinct collections held (capped at 2 for scoring)
 }
 
 // NFT collection addresses for multiplier checks

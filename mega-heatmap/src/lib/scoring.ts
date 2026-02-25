@@ -40,21 +40,31 @@ const MULTIPLIER_BUILDER = 1.2;
 const MULTIPLIER_POWER_USER = 1.3;
 
 // Identity multipliers
-const MULTIPLIER_MEGA_DOMAIN = 1.15;
+const MULTIPLIER_MEGA_DOMAIN = 1.5;    // was 1.15
 const MULTIPLIER_FARCASTER = 1.1;
+const MULTIPLIER_AGENT = 1.15;         // ERC-8004 registered agent or operator
 
-// NFT multipliers
-const MULTIPLIER_PROTARDIO = 1.2;
-const MULTIPLIER_NATIVE_NFT = 1.1;
+// Protardio
+const MULTIPLIER_PROTARDIO = 1.3;           // was 1.2 (base for holding ≥1)
+const PROTARDIO_BONUS_PER_EXTRA = 0.03;     // additive per extra held, if none listed
+const PROTARDIO_MAX_STACK = 10;             // stacking cap (total including first)
+
+// Native NFT
+const MULTIPLIER_NATIVE_NFT_BASE = 1.2;         // was 1.1 flat
+const NATIVE_NFT_BONUS_PER_COLLECTION = 0.05;
+const NATIVE_NFT_MAX_COLLECTIONS = 2;
 
 // ─── External Data Types ─────────────────────────────────────────────────────
 
 export interface ExternalBonusData {
   hasMegaDomain?: boolean;
   hasFarcaster?: boolean;
-  holdsProtardio?: boolean;
+  isAgent?: boolean;              // ERC-8004 registered agent or operator
+  protardioCount?: number;        // replaces holdsProtardio boolean
+  protardioAllUnlisted?: boolean;
   holdsNativeNft?: boolean;
-  nftHoldings?: string[]; // contract addresses of NFTs held
+  nativeNftCount?: number;        // distinct collections held
+  nftHoldings?: string[];         // contract addresses of NFTs held
 }
 
 // ─── Multiplier Detection ────────────────────────────────────────────────────
@@ -66,7 +76,7 @@ export function getMultipliers(
   // Activity-based multipliers
   const ogBonus = metrics.firstTxTimestamp <= MAINNET_LAUNCH_TIMESTAMP;
   const builderBonus = metrics.contractsDeployed > 0;
-  
+
   const daysSinceFirst = Math.max(
     1,
     Math.floor((Date.now() / 1000 - metrics.firstTxTimestamp) / 86400)
@@ -77,19 +87,19 @@ export function getMultipliers(
   // Identity multipliers (from external data)
   const megaDomainBonus = external?.hasMegaDomain ?? false;
   const farcasterBonus = external?.hasFarcaster ?? false;
+  const agentBonus = external?.isAgent ?? false;
 
-  // NFT multipliers (from external data)
-  let protardioBonus = external?.holdsProtardio ?? false;
-  let nativeNftBonus = external?.holdsNativeNft ?? false;
+  // Protardio (count-based; no longer exclusive with native NFT)
+  const protardioCount = external?.protardioCount ?? 0;
+  const protardioBonus = protardioCount >= 1;
+  const protardioAllUnlisted = external?.protardioAllUnlisted ?? false;
 
-  // If we have raw nftHoldings array, check against known collections
-  if (external?.nftHoldings && external.nftHoldings.length > 0) {
-    const holdings = external.nftHoldings.map(h => h.toLowerCase());
-    protardioBonus = holdings.includes(NFT_COLLECTIONS.protardio.toLowerCase());
-    nativeNftBonus = Object.values(NFT_COLLECTIONS).some(
-      addr => holdings.includes(addr.toLowerCase())
-    );
-  }
+  // Native NFT (additive, capped at NATIVE_NFT_MAX_COLLECTIONS)
+  const nativeNftCount = Math.min(
+    external?.nativeNftCount ?? 0,
+    NATIVE_NFT_MAX_COLLECTIONS
+  );
+  const nativeNftBonus = nativeNftCount >= 1;
 
   return {
     ogBonus,
@@ -97,27 +107,43 @@ export function getMultipliers(
     powerUserBonus,
     megaDomainBonus,
     farcasterBonus,
+    agentBonus,
     protardioBonus,
+    protardioCount,
+    protardioAllUnlisted,
     nativeNftBonus,
+    nativeNftCount,
   };
 }
 
 export function getMultiplierValue(multipliers: Multipliers): number {
   let value = 1.0;
-  
+
   // Activity multipliers
   if (multipliers.ogBonus) value *= MULTIPLIER_OG;
   if (multipliers.builderBonus) value *= MULTIPLIER_BUILDER;
   if (multipliers.powerUserBonus) value *= MULTIPLIER_POWER_USER;
-  
+
   // Identity multipliers
   if (multipliers.megaDomainBonus) value *= MULTIPLIER_MEGA_DOMAIN;
-  if (multipliers.farcasterBonus) value *= MULTIPLIER_FARCASTER;
-  
-  // NFT multipliers (protardio is separate from general native NFT)
-  if (multipliers.protardioBonus) value *= MULTIPLIER_PROTARDIO;
-  else if (multipliers.nativeNftBonus) value *= MULTIPLIER_NATIVE_NFT; // only if no protardio
-  
+  if (multipliers.farcasterBonus)  value *= MULTIPLIER_FARCASTER;
+  if (multipliers.agentBonus)      value *= MULTIPLIER_AGENT;
+
+  // Protardio (separate tier, no longer exclusive with native NFT)
+  if (multipliers.protardioBonus) {
+    value *= MULTIPLIER_PROTARDIO; // 1.3× base
+    if (multipliers.protardioAllUnlisted && multipliers.protardioCount > 1) {
+      const extras = Math.min(multipliers.protardioCount - 1, PROTARDIO_MAX_STACK - 1);
+      value += extras * PROTARDIO_BONUS_PER_EXTRA;
+    }
+  }
+
+  // Native NFT (additive, capped at 2 collections)
+  if (multipliers.nativeNftBonus) {
+    const collectionBonus = multipliers.nativeNftCount * NATIVE_NFT_BONUS_PER_COLLECTION;
+    value += MULTIPLIER_NATIVE_NFT_BASE - 1.0 + collectionBonus;
+  }
+
   return value;
 }
 
@@ -166,6 +192,9 @@ export interface ScoreBreakdown {
     fromDaysActive: number;
     fromAge: number;
   };
+  protardioStack: number;   // final protardio multiplier value applied
+  nativeNftStack: number;   // final native nft bonus value applied
+  agentBonus: boolean;
 }
 
 export function getScoreBreakdown(
@@ -190,12 +219,32 @@ export function getScoreBreakdown(
   const multiplierValue = getMultiplierValue(multipliers);
   const finalScore = Math.floor(basePoints * multiplierValue);
 
+  // Protardio: base multiplier factor + any additive stacking bonus
+  let protardioStack = 0;
+  if (multipliers.protardioBonus) {
+    protardioStack = MULTIPLIER_PROTARDIO;
+    if (multipliers.protardioAllUnlisted && multipliers.protardioCount > 1) {
+      const extras = Math.min(multipliers.protardioCount - 1, PROTARDIO_MAX_STACK - 1);
+      protardioStack += extras * PROTARDIO_BONUS_PER_EXTRA;
+    }
+  }
+
+  // Native NFT: additive contribution to the total multiplier
+  let nativeNftStack = 0;
+  if (multipliers.nativeNftBonus) {
+    nativeNftStack = MULTIPLIER_NATIVE_NFT_BASE - 1.0 +
+      multipliers.nativeNftCount * NATIVE_NFT_BONUS_PER_COLLECTION;
+  }
+
   return {
     basePoints,
     multipliers,
     multiplierValue,
     finalScore,
     breakdown,
+    protardioStack,
+    nativeNftStack,
+    agentBonus: multipliers.agentBonus,
   };
 }
 
