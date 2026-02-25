@@ -62,18 +62,20 @@ export function ProfileSetupModal({
   const linkedAddressRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (open) {
-      const isAddWallet = !!initialProfileId;
-      setStep(isAddWallet ? 'add-wallet' : 'details');
-      setProfileId(initialProfileId);
-      setDisplayName('');
-      setTwitter('');
-      setDisplayNameError('');
-      setSigningState('idle');
-      setErrorMessage(null);
-      linkedAddressRef.current = address?.toLowerCase() ?? null;
-    }
-  }, [open, initialProfileId, address]);
+    if (!open) return;
+    const isAddWallet = !!initialProfileId;
+    setStep(isAddWallet ? 'add-wallet' : 'details');
+    setProfileId(initialProfileId);
+    setDisplayName('');
+    setTwitter('');
+    setDisplayNameError('');
+    setSigningState('idle');
+    setErrorMessage(null);
+    // Snapshot the address at the moment the modal opens — intentionally
+    // excluded from deps so wallet switches don't overwrite this baseline.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    linkedAddressRef.current = address?.toLowerCase() ?? null;
+  }, [open, initialProfileId]); // address intentionally omitted
 
   useEffect(() => {
     if (initialProfileId) setProfileId(initialProfileId);
