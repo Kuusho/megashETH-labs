@@ -89,7 +89,24 @@ export interface Multipliers {
   ogBonus: boolean;        // First tx before mainnet launch
   builderBonus: boolean;   // Has deployed contracts
   powerUserBonus: boolean; // Avg > 50 tx/day
+  // Identity multipliers
+  megaDomainBonus: boolean;   // Owns a .mega domain
+  farcasterBonus: boolean;    // Has linked Farcaster account
+  // NFT collection multipliers (MegaETH native)
+  protardioBonus: boolean;    // Holds Protardio NFT
+  nativeNftBonus: boolean;    // Holds any MegaETH native NFT collection
 }
+
+// NFT collection addresses for multiplier checks
+export const NFT_COLLECTIONS = {
+  protardio: '0x5d38451841ee7a2e824a88afe47b00402157b08d',
+  badlyDrawnBarrys: '0xa7911e22b9bba3af9d43bbae3491aa50396cc453',
+  badBunnz: '0x89ff7a37bf8851bcbee20b1032afc583f89b40ff',
+  glitchyBunnies: '0x19f9b860eb96b574af72f639cc15cfe2685053a0',
+  worldComputerNetizens: '0x3fd43a658915a7ce5ae0a2e48f72b9fce7ba0c44',
+  legendOfBreadio: '0x015061aa806b5abab9ee453e366e18a713e8ea80',
+  nacciCartel: '0x2e5902a40115bf36739949d9875be0bcd2384c05',
+} as const;
 
 // ─── User Profiles Table ─────────────────────────────────────────────────────
 

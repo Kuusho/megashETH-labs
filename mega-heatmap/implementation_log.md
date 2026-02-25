@@ -480,3 +480,202 @@ POSTs to `/api/revalidate?secret=X`. Non-fatal — errors are logged as WARN.
 
 **Last Updated:** 2026-02-24
 **Current Status:** Live catalogue at `/deployments` shipping ✅, auto-revalidation wired ✅
+
+---
+
+## Session: Identity + NFT Multiplier Integration
+
+**Date:** 2026-02-25
+**Model:** Claude Opus 4.5
+**Goal:** Wire .mega domain resolution + NFT holdings into scoring system multipliers
+
+---
+
+### What Was Built
+
+**1. `src/lib/dotmega.ts` — NEW**
+.mega domain resolver wrapping the dotmega.domains API:
+- `resolveNameToAddress(name)` — name.mega → 0x address
+- `resolveAddressToName(address)` — 0x → name.mega (reverse lookup)
+- `lookupProfile(name)` — full profile fetch
+- Rate limits: 60 req/min resolve, 20 req/min lookup
+
+**2. `src/lib/neynar.ts` — MODIFIED**
+Upgraded to unified identity resolver:
+- `resolveToAddress()` now accepts 4 input types: address, FID, @username, name.mega
+- Parallel fetch: Farcaster + .mega lookups run simultaneously
+- `ResolvedUser` interface extended with `megaName?: string`
+- Return type expanded: `{ address, user?, megaDomain?, type }`
+
+**3. `src/components/AddressSearch.tsx` — MODIFIED**
+UI updated to display both identities:
+- .mega names shown in purple (#E879F9)
+- Farcaster usernames shown alongside
+- Graceful fallback when only one identity exists
+- Placeholder updated: "Enter address, @username, FID, or name.mega"
+
+**4. `src/lib/db/schema.ts` — MODIFIED**
+- Extended `Multipliers` interface with identity/NFT bonuses:
+  ```typescript
+  megaDomainBonus: boolean;   // 1.15x
+  farcasterBonus: boolean;    // 1.1x
+  protardioBonus: boolean;    // 1.2x
+  nativeNftBonus: boolean;    // 1.1x
+  ```
+- Added `NFT_COLLECTIONS` constant with all tracked addresses:
+  - Protardio: 0x5d38451841ee7a2e824a88afe47b00402157b08d
+  - Badly drawn Barrys: 0xa7911e22b9bba3af9d43bbae3491aa50396cc453
+  - Bad Bunnz: 0x89ff7a37bf8851bcbee20b1032afc583f89b40ff
+  - Glitchy Bunnies: 0x19f9b860eb96b574af72f639cc15cfe2685053a0
+  - World Computer Netizens: 0x3fd43a658915a7ce5ae0a2e48f72b9fce7ba0c44
+  - Legend of Breadio: 0x015061aa806b5abab9ee453e366e18a713e8ea80
+  - Nacci Cartel: 0x2e5902a40115bf36739949d9875be0bcd2384c05
+
+**5. `src/lib/scoring.ts` — MODIFIED**
+- Added new multiplier constants:
+  ```typescript
+  MULTIPLIER_MEGA_DOMAIN = 1.15;
+  MULTIPLIER_FARCASTER = 1.1;
+  MULTIPLIER_PROTARDIO = 1.2;
+  MULTIPLIER_NATIVE_NFT = 1.1;
+  ```
+- New `ExternalBonusData` interface for passing identity/NFT data
+- `getMultipliers()` now accepts optional `ExternalBonusData` param
+- `getMultiplierValue()` calculates combined multiplier including new bonuses
+- Protardio bonus is exclusive with native NFT bonus (no double-dip)
+
+**6. `src/lib/external-bonus.ts` — NEW**
+Fetches all external bonus data for scoring:
+- `fetchExternalBonusData(address)` — parallel fetch of:
+  - .mega domain (dotmega API)
+  - Farcaster account (neynar API)
+  - NFT holdings (Blockscout API v2)
+- `fetchExternalBonusDataCached(address)` — 5min TTL cache
+- `fetchExternalBonusDataBulk(addresses, concurrency)` — for leaderboard batch processing
+- Checks holdings against `NFT_COLLECTIONS` to determine bonuses
+
+**7. `src/app/api/user/[address]/route.ts` — MODIFIED**
+- Imports `fetchExternalBonusDataCached` + `calculateScore`
+- Fetches external bonus data on user lookup
+- Calculates enhanced score with all multipliers
+- Response now includes:
+  ```json
+  {
+    "score": {
+      "megaeth_native_score": 1234,   // enhanced with external bonuses
+      "base_score": 1000,             // activity-only (from DB)
+      "rank": 42,
+      ...
+    },
+    "identity": {
+      "mega_domain": true,
+      "farcaster": true
+    },
+    "nft_holdings": {
+      "protardio": true,
+      "native_nft": true,
+      "collections": 3
+    }
+  }
+  ```
+
+---
+
+### Multiplier Stack (Full)
+
+```
+Final Score = Base × Activity × Identity × NFT
+
+Activity:
+  OG Bonus (1.5x)         — first tx ≤ mainnet launch
+  Builder Bonus (1.2x)    — deployed contracts
+  Power User Bonus (1.3x) — avg >50 tx/day
+
+Identity:
+  .mega Domain (1.15x)    — owns a .mega name
+  Farcaster (1.1x)        — linked Farcaster account
+
+NFT (exclusive):
+  Protardio (1.2x)        — holds Protardio NFT
+  OR Native NFT (1.1x)    — holds any MegaETH native collection
+```
+
+Max theoretical multiplier: 1.5 × 1.2 × 1.3 × 1.15 × 1.1 × 1.2 = **3.58x**
+
+---
+
+### API Verification
+
+| Endpoint | Test | Result |
+|----------|------|--------|
+| `api.dotmega.domains/resolve?name=bread.mega` | → address | ✅ |
+| `api.dotmega.domains/resolve?address=0x...` | → name.mega | ✅ |
+| TypeScript compilation | `npx tsc --noEmit` | ✅ (pre-existing postgres error only) |
+
+---
+
+### Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| .mega gets 1.15x, Farcaster gets 1.1x | .mega is MegaETH-native identity, deserves higher weight than cross-chain FC |
+| Protardio exclusive with native NFT | Prevent double-counting; Protardio is special tier (project-specific) |
+| External data cached 5min | Balance freshness vs API rate limits (60 req/min .mega, Blockscout) |
+| Blockscout for NFT holdings | Chain-native data source, no external API key needed |
+| NFT bonus is 1.1-1.2x range | Lower than activity multipliers — holding is passive, activity is work |
+| Protardio gets 1.2x vs 1.1x generic | Reward project-specific community participation |
+
+### Scoring Philosophy
+
+**Core Principle:** Activity > Identity > Holdings
+
+The multiplier weights reflect effort hierarchy:
+1. **Activity multipliers (1.2-1.5x)** — Highest weight. OG users (1.5x) and builders (1.2x) did the work when it mattered. Power users (1.3x) sustain the network.
+2. **Identity multipliers (1.1-1.15x)** — Medium weight. .mega domain (1.15x) shows MegaETH commitment. Farcaster (1.1x) shows social presence but is cross-chain.
+3. **NFT multipliers (1.1-1.2x)** — Lowest weight. Holding is passive. Protardio (1.2x) is special case for ecosystem alignment.
+
+**Anti-Gaming Considerations:**
+- Gas spent is primary base component (expensive to farm)
+- Contract deployment bonus requires real builder activity
+- Daily recalculation prevents real-time manipulation
+- External bonuses cached (can't rapidly toggle holdings)
+
+**Stacking Logic:**
+- All activity multipliers stack multiplicatively
+- All identity multipliers stack multiplicatively
+- NFT multipliers are **exclusive** (Protardio OR native, not both)
+- This prevents NFT whales from stacking multiple collection bonuses
+
+**Example Calculation:**
+```
+User: 1000 txs, 0.5 ETH gas, 2 contracts, 10 days active, first tx Feb 9
+      + owns bread.mega + has Farcaster + holds Protardio
+
+Base:  (1000×0.5) + (0.5×100) + (2×50) + (10×10) + (16×2) = 782 points
+
+Activity: OG(1.5) × Builder(1.2) × PowerUser(1.0) = 1.8x
+Identity: .mega(1.15) × FC(1.1) = 1.265x
+NFT:      Protardio(1.2)
+
+Total Multiplier: 1.8 × 1.265 × 1.2 = 2.73x
+Final Score: 782 × 2.73 = 2,134 points
+```
+
+---
+
+### What's Left
+
+**Immediate:**
+- [ ] Update leaderboard UI to show .mega names + identity badges
+- [ ] Add multiplier breakdown tooltip in UserProfile component
+- [ ] Test enhanced scoring with real addresses
+
+**Later:**
+- [ ] OpenSea MCP integration for richer NFT metadata
+- [ ] Add more NFT collections as ecosystem grows
+- [ ] Consider .mega domain age as additional signal
+
+---
+
+**Last Updated:** 2026-02-25 04:25 GMT+1
+**Current Status:** Identity + NFT multipliers shipped ✅, API enhanced ✅

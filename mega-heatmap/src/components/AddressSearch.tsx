@@ -3,24 +3,26 @@
 import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { resolveToAddress, type ResolvedUser } from "@/lib/neynar";
+import type { MegaDomain } from "@/lib/dotmega";
 import { cn } from "@/lib/utils";
 import { Search, X } from "lucide-react";
 
 interface AddressSearchProps {
-  onAddressResolved: (address: string, user?: ResolvedUser) => void;
+  onAddressResolved: (address: string, user?: ResolvedUser, megaDomain?: MegaDomain) => void;
   placeholder?: string;
   className?: string;
 }
 
 export function AddressSearch({
   onAddressResolved,
-  placeholder = "Enter address, @username, or FID",
+  placeholder = "Enter address, @username, FID, or name.mega",
   className,
 }: AddressSearchProps) {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [resolvedUser, setResolvedUser] = useState<ResolvedUser | null>(null);
+  const [resolvedMega, setResolvedMega] = useState<MegaDomain | null>(null);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
@@ -30,19 +32,21 @@ export function AddressSearch({
       setIsLoading(true);
       setError(null);
       setResolvedUser(null);
+      setResolvedMega(null);
 
       try {
         const result = await resolveToAddress(input.trim());
         if (result) {
           setResolvedUser(result.user || null);
-          onAddressResolved(result.address, result.user);
+          setResolvedMega(result.megaDomain || null);
+          onAddressResolved(result.address, result.user, result.megaDomain);
         } else {
           setError(
-            "Could not resolve address. Try a valid 0x address, @username, or FID."
+            "Could not resolve. Try a valid 0x address, @username, FID, or name.mega"
           );
         }
       } catch (err) {
-        setError("Failed to look up address. Please try again.");
+        setError("Failed to look up. Please try again.");
         console.error(err);
       } finally {
         setIsLoading(false);
@@ -55,6 +59,7 @@ export function AddressSearch({
     setInput("");
     setError(null);
     setResolvedUser(null);
+    setResolvedMega(null);
   }, []);
 
   return (
@@ -173,9 +178,9 @@ export function AddressSearch({
         )}
       </AnimatePresence>
 
-      {/* Resolved user */}
+      {/* Resolved identity */}
       <AnimatePresence>
-        {resolvedUser && (
+        {(resolvedUser || resolvedMega) && (
           <motion.div
             initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
@@ -186,7 +191,7 @@ export function AddressSearch({
               border: "1px solid rgba(132, 226, 150, 0.2)",
             }}
           >
-            {resolvedUser.pfpUrl ? (
+            {resolvedUser?.pfpUrl ? (
               <img
                 src={resolvedUser.pfpUrl}
                 alt={resolvedUser.username}
@@ -200,34 +205,51 @@ export function AddressSearch({
                   color: "var(--color-accent)",
                 }}
               >
-                {resolvedUser.username.slice(0, 2).toUpperCase()}
+                {resolvedMega?.name?.slice(0, 2).toUpperCase() ||
+                  resolvedUser?.username?.slice(0, 2).toUpperCase() ||
+                  "?"}
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p
-                className="text-sm font-medium truncate"
-                style={{ color: "var(--color-text)" }}
-              >
-                @{resolvedUser.username}
-              </p>
+              {/* Primary identity: .mega or farcaster */}
+              <div className="flex items-center gap-2">
+                {resolvedMega && (
+                  <span
+                    className="text-sm font-semibold"
+                    style={{ color: "#E879F9" }} // purple for .mega
+                  >
+                    {resolvedMega.name}
+                  </span>
+                )}
+                {resolvedUser && (
+                  <span
+                    className="text-sm font-medium"
+                    style={{ color: resolvedMega ? "var(--color-muted)" : "var(--color-text)" }}
+                  >
+                    @{resolvedUser.username}
+                  </span>
+                )}
+              </div>
               <p
                 className="text-xs font-mono truncate"
                 style={{ color: "var(--color-muted)" }}
               >
-                {resolvedUser.primaryAddress}
+                {resolvedMega?.address || resolvedUser?.primaryAddress}
               </p>
             </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-xs" style={{ color: "var(--color-dim)" }}>
-                FID
-              </p>
-              <p
-                className="font-mono text-sm font-semibold"
-                style={{ color: "var(--color-accent)" }}
-              >
-                {resolvedUser.fid}
-              </p>
-            </div>
+            {resolvedUser && (
+              <div className="text-right flex-shrink-0">
+                <p className="text-xs" style={{ color: "var(--color-dim)" }}>
+                  FID
+                </p>
+                <p
+                  className="font-mono text-sm font-semibold"
+                  style={{ color: "var(--color-accent)" }}
+                >
+                  {resolvedUser.fid}
+                </p>
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>

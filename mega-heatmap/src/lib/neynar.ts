@@ -1,7 +1,10 @@
 /**
  * Neynar API integration for Farcaster lookups
  * Resolves usernames/FIDs to Ethereum addresses
+ * + .mega domain integration
  */
+
+import { resolveNameToAddress, resolveAddressToName, type MegaDomain } from './dotmega';
 
 const NEYNAR_API_KEY = process.env.NEXT_PUBLIC_NEYNAR_API_KEY || '2C29D27C-E42A-419E-8398-F09783CA29A7';
 
@@ -30,6 +33,7 @@ export interface ResolvedUser {
   verifiedAddresses: string[];
   allAddresses: string[];
   pfpUrl?: string;
+  megaName?: string; // .mega domain if registered
 }
 
 /**
@@ -145,58 +149,124 @@ function parseNeynarUser(user: NeynarUser): ResolvedUser {
 }
 
 /**
- * Smart resolve - accepts address, username, or FID
+ * Smart resolve - accepts address, username, FID, or .mega domain
  * Returns the primary address to use for lookups
  */
 export async function resolveToAddress(input: string): Promise<{
   address: string;
   user?: ResolvedUser;
-  type: 'address' | 'username' | 'fid';
+  megaDomain?: MegaDomain;
+  type: 'address' | 'username' | 'fid' | 'mega';
 } | null> {
   const trimmed = input.trim();
-  console.log("[Neynar] Resolving input:", trimmed);
+  console.log("[Identity] Resolving input:", trimmed);
 
   // Check if it's an Ethereum address
   if (/^0x[a-fA-F0-9]{40}$/.test(trimmed)) {
-    console.log("[Neynar] Detected as address");
-    const users = await lookupByAddress(trimmed);
-    console.log("[Neynar] Resolved address, FC user:", users[0]?.username || "none");
+    console.log("[Identity] Detected as address");
+    
+    // Parallel lookup: Farcaster + .mega
+    const [users, megaDomain] = await Promise.all([
+      lookupByAddress(trimmed),
+      resolveAddressToName(trimmed),
+    ]);
+    
+    const user = users[0];
+    if (user && megaDomain) {
+      user.megaName = megaDomain.name;
+    }
+    
+    console.log("[Identity] Resolved address:", {
+      fc: user?.username || "none",
+      mega: megaDomain?.name || "none",
+    });
+    
     return {
       address: trimmed.toLowerCase(),
-      user: users[0],
+      user: user || undefined,
+      megaDomain: megaDomain || undefined,
       type: 'address',
     };
   }
 
   // Check if it's a FID (numeric)
   if (/^\d+$/.test(trimmed)) {
-    console.log("[Neynar] Detected as FID");
+    console.log("[Identity] Detected as FID");
     const fid = parseInt(trimmed, 10);
     const user = await lookupByFid(fid);
     if (user && user.primaryAddress) {
-      console.log("[Neynar] Resolved FID to:", user.username, user.primaryAddress);
+      // Also check for .mega name
+      const megaDomain = await resolveAddressToName(user.primaryAddress);
+      if (megaDomain) user.megaName = megaDomain.name;
+      
+      console.log("[Identity] Resolved FID to:", user.username, user.primaryAddress);
       return {
         address: user.primaryAddress,
         user,
+        megaDomain: megaDomain || undefined,
         type: 'fid',
       };
     }
-    console.log("[Neynar] FID not found or no address");
+    console.log("[Identity] FID not found or no address");
     return null;
   }
 
-  // Treat as username
-  console.log("[Neynar] Detected as username");
+  // Check if it's a .mega domain
+  if (trimmed.endsWith('.mega')) {
+    console.log("[Identity] Detected as .mega domain");
+    const megaDomain = await resolveNameToAddress(trimmed);
+    if (megaDomain && megaDomain.address) {
+      // Also check if address has Farcaster
+      const users = await lookupByAddress(megaDomain.address);
+      const user = users[0];
+      if (user) user.megaName = megaDomain.name;
+      
+      console.log("[Identity] Resolved .mega to:", megaDomain.address);
+      return {
+        address: megaDomain.address.toLowerCase(),
+        user: user || undefined,
+        megaDomain,
+        type: 'mega',
+      };
+    }
+    console.log("[Identity] .mega domain not found");
+    return null;
+  }
+
+  // Treat as Farcaster username first
+  console.log("[Identity] Trying as Farcaster username");
   const user = await lookupByUsername(trimmed);
   if (user && user.primaryAddress) {
-    console.log("[Neynar] Resolved username to:", user.username, user.primaryAddress);
+    // Also check for .mega name
+    const megaDomain = await resolveAddressToName(user.primaryAddress);
+    if (megaDomain) user.megaName = megaDomain.name;
+    
+    console.log("[Identity] Resolved username to:", user.username, user.primaryAddress);
     return {
       address: user.primaryAddress,
       user,
+      megaDomain: megaDomain || undefined,
       type: 'username',
     };
   }
 
-  console.log("[Neynar] Username not found");
+  // Fallback: try as .mega name without suffix
+  console.log("[Identity] Trying as .mega name (no suffix)");
+  const megaDomain = await resolveNameToAddress(trimmed);
+  if (megaDomain && megaDomain.address) {
+    const users = await lookupByAddress(megaDomain.address);
+    const fcUser = users[0];
+    if (fcUser) fcUser.megaName = megaDomain.name;
+    
+    console.log("[Identity] Resolved as .mega name:", megaDomain.name);
+    return {
+      address: megaDomain.address.toLowerCase(),
+      user: fcUser || undefined,
+      megaDomain,
+      type: 'mega',
+    };
+  }
+
+  console.log("[Identity] Could not resolve input");
   return null;
 }

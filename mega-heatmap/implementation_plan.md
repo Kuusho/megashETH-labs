@@ -649,6 +649,116 @@ mega-heatmap/
 
 ---
 
+## Phase 6: Identity + NFT Multipliers (Added 2026-02-25)
+
+### 6.1 .mega Domain Integration ✅
+**Files Created/Modified:**
+- `src/lib/dotmega.ts` — NEW: .mega domain resolver
+- `src/lib/neynar.ts` — unified identity resolver (FC + .mega)
+- `src/components/AddressSearch.tsx` — UI shows both identities
+
+**Features:**
+- [x] Resolve name.mega → address
+- [x] Reverse lookup address → name.mega
+- [x] Parallel fetch Farcaster + .mega
+- [x] UI displays .mega in purple, FC usernames alongside
+
+### 6.2 NFT Holdings Multiplier ✅
+**Files Created/Modified:**
+- `src/lib/db/schema.ts` — NFT_COLLECTIONS constant, expanded Multipliers
+- `src/lib/external-bonus.ts` — NEW: fetches identity + NFT data
+- `src/lib/scoring.ts` — new multiplier constants + logic
+
+**NFT Collections Tracked:**
+| Collection | Address | Multiplier |
+|------------|---------|------------|
+| Protardio | 0x5d38...157b08d | 1.2x |
+| Badly drawn Barrys | 0xa791...cc453 | 1.1x |
+| Bad Bunnz | 0x89ff...b40ff | 1.1x |
+| Glitchy Bunnies | 0x19f9...53a0 | 1.1x |
+| World Computer Netizens | 0x3fd4...a44 | 1.1x |
+| Legend of Breadio | 0x0150...ea80 | 1.1x |
+| Nacci Cartel | 0x2e59...4c05 | 1.1x |
+
+### 6.3 Enhanced Scoring API ✅
+**File Modified:** `src/app/api/user/[address]/route.ts`
+
+**New Response Fields:**
+```json
+{
+  "score": {
+    "megaeth_native_score": 1234,  // with external bonuses
+    "base_score": 1000             // activity-only
+  },
+  "identity": { "mega_domain": bool, "farcaster": bool },
+  "nft_holdings": { "protardio": bool, "native_nft": bool, "collections": int }
+}
+```
+
+### 6.4 Remaining Tasks
+- [ ] Update leaderboard UI to show .mega names
+- [ ] Add identity badges to user cards
+- [ ] Add multiplier breakdown tooltip in UserProfile
+- [ ] OpenSea MCP integration for richer NFT metadata
+- [ ] Test with production database
+
+---
+
+## Current Multiplier Stack
+
+```
+Final Score = Base × Activity × Identity × NFT
+
+Base Points Formula:
+  (txs × 0.5) + (gas_eth × 100) + (contracts × 50) + (days_active × 10) + (account_age_days × 2)
+
+Activity Multipliers (stack multiplicatively):
+  OG Bonus         1.5x   (first tx ≤ 2026-02-09)
+  Builder Bonus    1.2x   (deployed contracts)
+  Power User Bonus 1.3x   (avg >50 tx/day)
+
+Identity Multipliers (stack multiplicatively):
+  .mega Domain     1.15x  (owns a .mega name)
+  Farcaster        1.1x   (linked account)
+
+NFT Multipliers (exclusive — only highest applies):
+  Protardio        1.2x   (holds Protardio)
+  Native NFT       1.1x   (holds any MegaETH NFT)
+
+Max Multiplier: 1.5 × 1.2 × 1.3 × 1.15 × 1.1 × 1.2 = 3.58x
+```
+
+### Scoring Philosophy
+
+**Weight Hierarchy:** Activity > Identity > Holdings
+
+| Category | Range | Rationale |
+|----------|-------|-----------|
+| Activity | 1.2-1.5x | Highest — rewards actual work on chain |
+| Identity | 1.1-1.15x | Medium — shows commitment but lower effort |
+| NFT | 1.1-1.2x | Lowest — holding is passive |
+
+**Design Decisions:**
+
+1. **.mega > Farcaster (1.15x vs 1.1x)**
+   - .mega is MegaETH-native identity
+   - Farcaster is cross-chain, less ecosystem-specific
+
+2. **NFT multipliers are exclusive**
+   - Only highest NFT bonus applies (Protardio OR generic, not both)
+   - Prevents NFT whales from stacking multiple collection bonuses
+   - Protardio gets premium (1.2x) as project-aligned community
+
+3. **Gas spent is primary base component**
+   - Expensive to farm → anti-gaming
+   - Rewards genuine network usage
+
+4. **OG bonus is highest multiplier (1.5x)**
+   - Early users took risk, deserve recognition
+   - Creates urgency for new users (can't get OG status anymore)
+
+---
+
 ## Notes
 
 - Keep point calculation transparent in code but mysterious in UI
@@ -659,4 +769,15 @@ mega-heatmap/
 
 ---
 
-**Next Step:** Begin Phase 1 - Database Schema + Scoring Engine
+## Implementation Status Summary
+
+| Phase | Status | Completion |
+|-------|--------|------------|
+| Phase 1: Backend | ✅ Complete | 100% |
+| Phase 2: API Routes | ✅ Complete | 100% |
+| Phase 3: Frontend | ✅ Complete | 90% (leaderboard badges pending) |
+| Phase 4: Background Jobs | ⏸️ Deferred | 0% |
+| Phase 5: Polish & Deploy | ✅ Complete | 100% |
+| Phase 6: Identity + NFT | ✅ Complete | 85% (UI badges pending) |
+
+**Next Step:** Update leaderboard UI to display .mega names + multiplier badges

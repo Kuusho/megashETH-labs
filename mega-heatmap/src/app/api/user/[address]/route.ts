@@ -18,7 +18,8 @@ import {
   isValidAddress,
   normalizeAddress,
 } from '@/lib/activity';
-import { getScoreBreakdown, getPercentile } from '@/lib/scoring';
+import { getScoreBreakdown, getPercentile, calculateScore } from '@/lib/scoring';
+import { fetchExternalBonusDataCached } from '@/lib/external-bonus';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -148,8 +149,11 @@ export async function GET(
       : 1;
     const avgTxPerDay = user.totalTxs / daysSinceFirst;
 
-    // Get multipliers
-    const breakdown = getScoreBreakdown({
+    // Fetch external bonus data (identity + NFT holdings)
+    const externalData = await fetchExternalBonusDataCached(address);
+
+    // Build metrics object
+    const metrics = {
       address: user.address,
       totalTxs: user.totalTxs,
       gasSpentEth: user.gasSpentEth,
@@ -157,7 +161,13 @@ export async function GET(
       daysActive: user.daysActive,
       firstTxTimestamp: user.firstTxTimestamp ?? 0,
       lastTxTimestamp: user.lastTxTimestamp ?? 0,
-    });
+    };
+
+    // Get multipliers with external data
+    const breakdown = getScoreBreakdown(metrics, externalData);
+    
+    // Recalculate score with external bonuses
+    const enhancedScore = calculateScore(metrics, externalData);
 
     // Build response
     const response = NextResponse.json({
@@ -171,12 +181,22 @@ export async function GET(
         avg_tx_per_day: parseFloat(avgTxPerDay.toFixed(2)),
       },
       score: {
-        megaeth_native_score: user.megaethNativeScore,
+        megaeth_native_score: enhancedScore,
+        base_score: user.megaethNativeScore, // activity-only score from DB
         rank: user.rank,
         total_users: totalUsers,
         percentile,
       },
       multipliers: breakdown.multipliers,
+      identity: {
+        mega_domain: externalData.hasMegaDomain,
+        farcaster: externalData.hasFarcaster,
+      },
+      nft_holdings: {
+        protardio: externalData.holdsProtardio,
+        native_nft: externalData.holdsNativeNft,
+        collections: externalData.nftHoldings?.length ?? 0,
+      },
       last_updated: new Date(user.lastUpdated * 1000).toISOString(),
     });
 

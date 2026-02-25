@@ -4,15 +4,24 @@
  * Point Formula:
  * base = (txs * 0.5) + (gas_eth * 100) + (deploys * 50) + (days * 10) + (age_days * 2)
  * 
- * Multipliers:
+ * Multipliers (Activity):
  * - OG Bonus (1.5x): First tx before or on 2026-02-09 (mainnet launch)
  * - Builder Bonus (1.2x): Has deployed at least 1 contract
  * - Power User Bonus (1.3x): Average >50 tx/day
+ * 
+ * Multipliers (Identity):
+ * - .mega Domain (1.15x): Owns a .mega domain name
+ * - Farcaster (1.1x): Has linked Farcaster account
+ * 
+ * Multipliers (NFT Holdings):
+ * - Protardio (1.2x): Holds Protardio NFT
+ * - Native NFT (1.1x): Holds any MegaETH native NFT collection
  * 
  * Final Score: int(base * combined_multipliers)
  */
 
 import type { UserMetrics, Multipliers } from './db/schema';
+import { NFT_COLLECTIONS } from './db/schema';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -25,13 +34,36 @@ const POINTS_PER_CONTRACT = 50;
 const POINTS_PER_DAY_ACTIVE = 10;
 const POINTS_PER_DAY_AGE = 2;
 
+// Activity multipliers
 const MULTIPLIER_OG = 1.5;
 const MULTIPLIER_BUILDER = 1.2;
 const MULTIPLIER_POWER_USER = 1.3;
 
+// Identity multipliers
+const MULTIPLIER_MEGA_DOMAIN = 1.15;
+const MULTIPLIER_FARCASTER = 1.1;
+
+// NFT multipliers
+const MULTIPLIER_PROTARDIO = 1.2;
+const MULTIPLIER_NATIVE_NFT = 1.1;
+
+// ─── External Data Types ─────────────────────────────────────────────────────
+
+export interface ExternalBonusData {
+  hasMegaDomain?: boolean;
+  hasFarcaster?: boolean;
+  holdsProtardio?: boolean;
+  holdsNativeNft?: boolean;
+  nftHoldings?: string[]; // contract addresses of NFTs held
+}
+
 // ─── Multiplier Detection ────────────────────────────────────────────────────
 
-export function getMultipliers(metrics: UserMetrics): Multipliers {
+export function getMultipliers(
+  metrics: UserMetrics,
+  external?: ExternalBonusData
+): Multipliers {
+  // Activity-based multipliers
   const ogBonus = metrics.firstTxTimestamp <= MAINNET_LAUNCH_TIMESTAMP;
   const builderBonus = metrics.contractsDeployed > 0;
   
@@ -42,19 +74,49 @@ export function getMultipliers(metrics: UserMetrics): Multipliers {
   const avgTxPerDay = metrics.totalTxs / daysSinceFirst;
   const powerUserBonus = avgTxPerDay > POWER_USER_TX_THRESHOLD;
 
+  // Identity multipliers (from external data)
+  const megaDomainBonus = external?.hasMegaDomain ?? false;
+  const farcasterBonus = external?.hasFarcaster ?? false;
+
+  // NFT multipliers (from external data)
+  let protardioBonus = external?.holdsProtardio ?? false;
+  let nativeNftBonus = external?.holdsNativeNft ?? false;
+
+  // If we have raw nftHoldings array, check against known collections
+  if (external?.nftHoldings && external.nftHoldings.length > 0) {
+    const holdings = external.nftHoldings.map(h => h.toLowerCase());
+    protardioBonus = holdings.includes(NFT_COLLECTIONS.protardio.toLowerCase());
+    nativeNftBonus = Object.values(NFT_COLLECTIONS).some(
+      addr => holdings.includes(addr.toLowerCase())
+    );
+  }
+
   return {
     ogBonus,
     builderBonus,
     powerUserBonus,
+    megaDomainBonus,
+    farcasterBonus,
+    protardioBonus,
+    nativeNftBonus,
   };
 }
 
 export function getMultiplierValue(multipliers: Multipliers): number {
   let value = 1.0;
   
+  // Activity multipliers
   if (multipliers.ogBonus) value *= MULTIPLIER_OG;
   if (multipliers.builderBonus) value *= MULTIPLIER_BUILDER;
   if (multipliers.powerUserBonus) value *= MULTIPLIER_POWER_USER;
+  
+  // Identity multipliers
+  if (multipliers.megaDomainBonus) value *= MULTIPLIER_MEGA_DOMAIN;
+  if (multipliers.farcasterBonus) value *= MULTIPLIER_FARCASTER;
+  
+  // NFT multipliers (protardio is separate from general native NFT)
+  if (multipliers.protardioBonus) value *= MULTIPLIER_PROTARDIO;
+  else if (multipliers.nativeNftBonus) value *= MULTIPLIER_NATIVE_NFT; // only if no protardio
   
   return value;
 }
@@ -77,9 +139,12 @@ export function calculateBasePoints(metrics: UserMetrics): number {
   return basePoints;
 }
 
-export function calculateScore(metrics: UserMetrics): number {
+export function calculateScore(
+  metrics: UserMetrics,
+  external?: ExternalBonusData
+): number {
   const basePoints = calculateBasePoints(metrics);
-  const multipliers = getMultipliers(metrics);
+  const multipliers = getMultipliers(metrics, external);
   const multiplierValue = getMultiplierValue(multipliers);
 
   const finalScore = Math.floor(basePoints * multiplierValue);
@@ -103,7 +168,10 @@ export interface ScoreBreakdown {
   };
 }
 
-export function getScoreBreakdown(metrics: UserMetrics): ScoreBreakdown {
+export function getScoreBreakdown(
+  metrics: UserMetrics,
+  external?: ExternalBonusData
+): ScoreBreakdown {
   const daysSinceFirst = Math.max(
     1,
     Math.floor((Date.now() / 1000 - metrics.firstTxTimestamp) / 86400)
@@ -118,7 +186,7 @@ export function getScoreBreakdown(metrics: UserMetrics): ScoreBreakdown {
   };
 
   const basePoints = calculateBasePoints(metrics);
-  const multipliers = getMultipliers(metrics);
+  const multipliers = getMultipliers(metrics, external);
   const multiplierValue = getMultiplierValue(multipliers);
   const finalScore = Math.floor(basePoints * multiplierValue);
 
