@@ -34,6 +34,12 @@ const POINTS_PER_CONTRACT = 50;
 const POINTS_PER_DAY_ACTIVE = 10;
 const POINTS_PER_DAY_AGE = 2;
 
+// New signal constants
+const POINTS_PER_ACTIVE_GAS = 3000;    // 3 pts per 0.001 ETH active gas (last 30d)
+const POINTS_PER_GAS_MILESTONE = 1500; // per floor(lifetimeGasEth) tier, uncapped
+const USDM_POINTS_PER_USD = 0.1;       // 0.1 pts per USD of USDM volume
+const USDM_POINTS_CAP = 5000;          // cap for USDM contribution
+
 // Activity multipliers
 const MULTIPLIER_OG = 1.5;
 const MULTIPLIER_BUILDER = 1.2;
@@ -160,7 +166,10 @@ export function calculateBasePoints(metrics: UserMetrics): number {
     metrics.gasSpentEth * POINTS_PER_ETH_GAS +
     metrics.contractsDeployed * POINTS_PER_CONTRACT +
     metrics.daysActive * POINTS_PER_DAY_ACTIVE +
-    daysSinceFirst * POINTS_PER_DAY_AGE;
+    daysSinceFirst * POINTS_PER_DAY_AGE +
+    metrics.activeGasEth * POINTS_PER_ACTIVE_GAS +
+    metrics.gasMilestoneTier * POINTS_PER_GAS_MILESTONE +
+    Math.min(metrics.usdmTransacted * USDM_POINTS_PER_USD, USDM_POINTS_CAP);
 
   return basePoints;
 }
@@ -191,6 +200,9 @@ export interface ScoreBreakdown {
     fromDeployments: number;
     fromDaysActive: number;
     fromAge: number;
+    fromActiveGas: number;
+    fromGasMilestone: number;
+    fromUsdm: number;
   };
   protardioStack: number;   // final protardio multiplier value applied
   nativeNftStack: number;   // final native nft bonus value applied
@@ -212,6 +224,9 @@ export function getScoreBreakdown(
     fromDeployments: metrics.contractsDeployed * POINTS_PER_CONTRACT,
     fromDaysActive: metrics.daysActive * POINTS_PER_DAY_ACTIVE,
     fromAge: daysSinceFirst * POINTS_PER_DAY_AGE,
+    fromActiveGas: metrics.activeGasEth * POINTS_PER_ACTIVE_GAS,
+    fromGasMilestone: metrics.gasMilestoneTier * POINTS_PER_GAS_MILESTONE,
+    fromUsdm: Math.min(metrics.usdmTransacted * USDM_POINTS_PER_USD, USDM_POINTS_CAP),
   };
 
   const basePoints = calculateBasePoints(metrics);
@@ -272,12 +287,15 @@ export const TEST_CASES = [
       address: '0xtest1',
       totalTxs: 100,
       gasSpentEth: 0.1,
+      activeGasEth: 0,
+      gasMilestoneTier: 0,
+      usdmTransacted: 0,
       contractsDeployed: 0,
       daysActive: 5,
       firstTxTimestamp: 1739232000, // Feb 11, 2026
       lastTxTimestamp: 1739664000,
     },
-    expectedScore: 130, // (100*0.5 + 0.1*100 + 0 + 5*10 + 11*2) = 130
+    expectedScore: 130,
   },
   {
     name: 'OG Builder',
@@ -285,12 +303,15 @@ export const TEST_CASES = [
       address: '0xtest2',
       totalTxs: 1000,
       gasSpentEth: 1.0,
+      activeGasEth: 0,
+      gasMilestoneTier: 1,
+      usdmTransacted: 0,
       contractsDeployed: 3,
       daysActive: 14,
       firstTxTimestamp: 1739059200, // Feb 9, 2026 (mainnet launch)
       lastTxTimestamp: 1740268800,
     },
-    expectedScore: 1836, // base=850, OG*1.5, Builder*1.2 = 1530
+    expectedScore: 1836,
   },
   {
     name: 'Power User',
@@ -298,12 +319,15 @@ export const TEST_CASES = [
       address: '0xtest3',
       totalTxs: 5000,
       gasSpentEth: 2.5,
+      activeGasEth: 0,
+      gasMilestoneTier: 2,
+      usdmTransacted: 0,
       contractsDeployed: 1,
       daysActive: 14,
       firstTxTimestamp: 1739145600, // Feb 10, 2026
       lastTxTimestamp: 1740355200,
     },
-    expectedScore: 6318, // All multipliers active
+    expectedScore: 6318,
   },
 ];
 

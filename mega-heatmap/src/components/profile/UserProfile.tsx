@@ -16,6 +16,9 @@ interface ScoreBreakdown {
   from_deployments: number;
   from_days_active: number;
   from_age: number;
+  from_active_gas: number;
+  from_gas_milestone: number;
+  from_usdm: number;
   multiplier_value: number;
   protardio_stack: number;
   native_nft_stack: number;
@@ -85,7 +88,10 @@ interface UserProfileData {
 function ScoreBreakdownPanel({ bd }: { bd: ScoreBreakdown }) {
   const items = [
     { label: 'Transactions', value: bd.from_txs },
-    { label: 'Gas spent', value: bd.from_gas },
+    { label: 'Lifetime gas', value: bd.from_gas },
+    { label: 'Active gas (30d)', value: bd.from_active_gas },
+    { label: 'Gas milestone', value: bd.from_gas_milestone },
+    { label: 'USDM volume', value: bd.from_usdm },
     { label: 'Contracts', value: bd.from_deployments },
     { label: 'Active days', value: bd.from_days_active },
     { label: 'Account age', value: bd.from_age },

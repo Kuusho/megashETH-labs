@@ -20,6 +20,9 @@ export const userActivity = pgTable(
     totalTxs: integer('total_txs').default(0).notNull(),
     gasSpentWei: text('gas_spent_wei').default('0').notNull(),
     gasSpentEth: real('gas_spent_eth').default(0).notNull(),
+    activeGasEth: real('active_gas_eth').default(0).notNull(),
+    gasMilestoneTier: integer('gas_milestone_tier').default(0).notNull(),
+    usdmTransacted: real('usdm_transacted').default(0).notNull(),
     contractsDeployed: integer('contracts_deployed').default(0).notNull(),
     daysActive: integer('days_active').default(0).notNull(),
     firstTxTimestamp: integer('first_tx_timestamp'),
@@ -72,6 +75,9 @@ export interface UserMetrics {
   address: string;
   totalTxs: number;
   gasSpentEth: number;
+  activeGasEth: number;       // gas spent in last 30 days (ETH)
+  gasMilestoneTier: number;   // floor(lifetimeGasEth) — lifetime commitment tier
+  usdmTransacted: number;     // total USDM volume (USD, both directions)
   contractsDeployed: number;
   daysActive: number;
   firstTxTimestamp: number;

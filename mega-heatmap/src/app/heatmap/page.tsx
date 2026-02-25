@@ -445,12 +445,12 @@ export default function HeatmapPage() {
           className="card p-6"
         >
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-semibold" style={{ color: '#dfdadb' }}>
+            <h2 className="text-lg font-semibold" style={{ color: 'var(--color-text)' }}>
               Compare Heatmaps
             </h2>
             <span
-              className="px-2 py-1 rounded-sm text-xs"
-              style={{ backgroundColor: 'rgba(235, 69, 17, 0.1)', color: '#eb4511' }}
+              className="px-2 py-1 rounded text-xs font-semibold uppercase tracking-wider"
+              style={{ backgroundColor: 'rgba(132,226,150,0.08)', color: 'var(--color-accent)', border: '1px solid rgba(132,226,150,0.2)' }}
             >
               Live lookup
             </span>
@@ -459,14 +459,14 @@ export default function HeatmapPage() {
           {/* Comparison search inputs */}
           <div className="grid md:grid-cols-2 gap-4 mb-8">
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#878283' }}>User A</p>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-dim)' }}>User A</p>
               <AddressSearch
                 onAddressResolved={handleCompareA}
                 placeholder="Address, @username, or FID"
               />
             </div>
             <div>
-              <p className="text-xs font-medium mb-2" style={{ color: '#878283' }}>User B</p>
+              <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--color-dim)' }}>User B</p>
               <AddressSearch
                 onAddressResolved={handleCompareB}
                 placeholder="Address, @username, or FID"
@@ -490,31 +490,31 @@ export default function HeatmapPage() {
                       ) : (
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center font-bold mb-2 mx-auto"
-                          style={{ background: 'linear-gradient(135deg, #eb4511 0%, #ff9000 100%)', color: '#0a0909' }}
+                          style={{ backgroundColor: 'rgba(132,226,150,0.15)', color: 'var(--color-accent)', border: '1px solid rgba(132,226,150,0.3)' }}
                         >
                           {(compareUserA.user?.username || compareUserA.address.slice(2, 4)).slice(0, 2).toUpperCase()}
                         </div>
                       )}
-                      <p className="font-medium" style={{ color: '#dfdadb' }}>
+                      <p className="font-semibold" style={{ color: 'var(--color-text)' }}>
                         {compareUserA.user ? `@${compareUserA.user.username}` : `${compareUserA.address.slice(0, 6)}...`}
                       </p>
-                      <p className="text-xs font-mono" style={{ color: '#878283' }}>
+                      <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
                         {compareUserA.address.slice(0, 6)}...{compareUserA.address.slice(-4)}
                       </p>
                       {scoreA !== null && (
-                        <div className="mt-1 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(235,69,17,0.1)', color: '#eb4511' }}>
+                        <div className="mt-1.5 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(132,226,150,0.12)', color: 'var(--color-accent)', border: '1px solid rgba(132,226,150,0.2)' }}>
                           {scoreA.toLocaleString()} pts
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: '#1a1617' }}>
-                      <span style={{ color: '#454041' }}>?</span>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: 'rgba(174,164,191,0.06)', border: '1px solid rgba(174,164,191,0.12)' }}>
+                      <span style={{ color: 'var(--color-dim)' }}>?</span>
                     </div>
                   )}
                 </div>
 
-                <div className="text-3xl font-bold" style={{ color: '#454041' }}>vs</div>
+                <div className="text-2xl font-bold font-mono" style={{ color: 'var(--color-dim)' }}>vs</div>
 
                 <div className="text-center">
                   {compareUserB ? (
@@ -528,64 +528,64 @@ export default function HeatmapPage() {
                       ) : (
                         <div
                           className="w-12 h-12 rounded-full flex items-center justify-center font-bold mb-2 mx-auto"
-                          style={{ background: 'linear-gradient(135deg, #b02e0c 0%, #8c250a 100%)', color: '#dfdadb' }}
+                          style={{ backgroundColor: 'rgba(174,164,191,0.1)', color: 'var(--color-muted)', border: '1px solid rgba(174,164,191,0.2)' }}
                         >
                           {(compareUserB.user?.username || compareUserB.address.slice(2, 4)).slice(0, 2).toUpperCase()}
                         </div>
                       )}
-                      <p className="font-medium" style={{ color: '#dfdadb' }}>
+                      <p className="font-semibold" style={{ color: 'var(--color-text)' }}>
                         {compareUserB.user ? `@${compareUserB.user.username}` : `${compareUserB.address.slice(0, 6)}...`}
                       </p>
-                      <p className="text-xs font-mono" style={{ color: '#878283' }}>
+                      <p className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
                         {compareUserB.address.slice(0, 6)}...{compareUserB.address.slice(-4)}
                       </p>
                       {scoreB !== null && (
-                        <div className="mt-1 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(176,46,12,0.12)', color: '#b02e0c' }}>
+                        <div className="mt-1.5 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(174,164,191,0.08)', color: 'var(--color-muted)', border: '1px solid rgba(174,164,191,0.2)' }}>
                           {scoreB.toLocaleString()} pts
                         </div>
                       )}
                     </>
                   ) : (
-                    <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: '#1a1617' }}>
-                      <span style={{ color: '#454041' }}>?</span>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: 'rgba(174,164,191,0.06)', border: '1px solid rgba(174,164,191,0.12)' }}>
+                      <span style={{ color: 'var(--color-dim)' }}>?</span>
                     </div>
                   )}
                 </div>
               </div>
 
               {/* Side by side heatmaps */}
-              <div className="grid md:grid-cols-2 gap-6 mb-8">
-                <div className="p-4 rounded-sm" style={{ backgroundColor: '#0a0909' }}>
-                  <p className="text-sm font-medium mb-3" style={{ color: '#878283' }}>
+              <div className="grid md:grid-cols-2 gap-4 mb-8">
+                <div className="p-4 rounded-lg" style={{ backgroundColor: 'rgba(174,164,191,0.04)', border: '1px solid rgba(174,164,191,0.08)' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-accent)' }}>
                     {compareUserA?.user ? `@${compareUserA.user.username}` : compareUserA?.address.slice(0, 10) || 'User A'}
                   </p>
                   <div className="overflow-x-auto scrollbar-hide">
                     {isLoadingA ? (
-                      <div className="h-24 flex items-center justify-center" style={{ color: '#454041' }}>
+                      <div className="h-24 flex items-center justify-center text-xs" style={{ color: 'var(--color-dim)' }}>
                         Loading...
                       </div>
                     ) : compareDataA.size > 0 ? (
                       <Heatmap data={compareDataA} colorScheme={colorScheme} showLabels={false} />
                     ) : (
-                      <div className="h-24 flex items-center justify-center" style={{ color: '#454041' }}>
+                      <div className="h-24 flex items-center justify-center text-xs" style={{ color: 'var(--color-dim)' }}>
                         No data
                       </div>
                     )}
                   </div>
                 </div>
-                <div className="p-4 rounded-sm" style={{ backgroundColor: '#0a0909' }}>
-                  <p className="text-sm font-medium mb-3" style={{ color: '#878283' }}>
+                <div className="p-4 rounded-lg" style={{ backgroundColor: 'rgba(174,164,191,0.04)', border: '1px solid rgba(174,164,191,0.08)' }}>
+                  <p className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-muted)' }}>
                     {compareUserB?.user ? `@${compareUserB.user.username}` : compareUserB?.address.slice(0, 10) || 'User B'}
                   </p>
                   <div className="overflow-x-auto scrollbar-hide">
                     {isLoadingB ? (
-                      <div className="h-24 flex items-center justify-center" style={{ color: '#454041' }}>
+                      <div className="h-24 flex items-center justify-center text-xs" style={{ color: 'var(--color-dim)' }}>
                         Loading...
                       </div>
                     ) : compareDataB.size > 0 ? (
                       <Heatmap data={compareDataB} colorScheme={colorScheme} showLabels={false} />
                     ) : (
-                      <div className="h-24 flex items-center justify-center" style={{ color: '#454041' }}>
+                      <div className="h-24 flex items-center justify-center text-xs" style={{ color: 'var(--color-dim)' }}>
                         No data
                       </div>
                     )}
@@ -621,7 +621,7 @@ export default function HeatmapPage() {
                   />
 
                   {/* Share buttons */}
-                  <div className="flex justify-center gap-3 pt-6 border-t" style={{ borderColor: '#292526' }}>
+                  <div className="flex justify-center gap-3 pt-6 border-t" style={{ borderColor: 'rgba(174,164,191,0.12)' }}>
                     <button
                       onClick={handleShareImage}
                       className="btn-primary flex items-center gap-2"
@@ -662,8 +662,8 @@ export default function HeatmapPage() {
 
           {/* Empty state */}
           {!compareUserA && !compareUserB && (
-            <div className="text-center py-12" style={{ color: '#454041' }}>
-              <p className="text-sm">Enter addresses above to compare heatmaps</p>
+            <div className="text-center py-12">
+              <p className="text-sm" style={{ color: 'var(--color-dim)' }}>Enter addresses above to compare heatmaps</p>
             </div>
           )}
         </motion.div>
@@ -727,30 +727,30 @@ function ComparisonMetric({
   return (
     <div>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-sm" style={{ color: '#878283' }}>{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--color-dim)' }}>{label}</span>
       </div>
 
       <div className="flex items-center gap-4">
         <div className="w-24 text-right">
           <span
-            className="text-sm font-semibold tabular-nums"
-            style={{ color: winner === "a" ? '#eb4511' : '#878283' }}
+            className="text-sm font-semibold font-mono tabular-nums"
+            style={{ color: winner === "a" ? 'var(--color-accent)' : 'var(--color-dim)' }}
           >
             {valueA.toLocaleString()}{suffix && ` ${suffix}`}
           </span>
         </div>
 
-        <div className="flex-1 flex h-6 rounded-sm overflow-hidden" style={{ backgroundColor: '#1a1617' }}>
+        <div className="flex-1 flex h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(174,164,191,0.08)' }}>
           <motion.div
-            className="h-full"
-            style={{ backgroundColor: winner === "a" ? '#eb4511' : '#454041' }}
+            className="h-full rounded-l-full"
+            style={{ backgroundColor: winner === "a" ? 'var(--color-accent)' : 'rgba(174,164,191,0.2)' }}
             initial={{ width: 0 }}
             animate={{ width: `${percentA}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
           />
           <motion.div
-            className="h-full"
-            style={{ backgroundColor: winner === "b" ? '#b02e0c' : '#454041' }}
+            className="h-full rounded-r-full"
+            style={{ backgroundColor: winner === "b" ? 'var(--color-muted)' : 'rgba(174,164,191,0.1)' }}
             initial={{ width: 0 }}
             animate={{ width: `${percentB}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
@@ -759,8 +759,8 @@ function ComparisonMetric({
 
         <div className="w-24">
           <span
-            className="text-sm font-semibold tabular-nums"
-            style={{ color: winner === "b" ? '#b02e0c' : '#878283' }}
+            className="text-sm font-semibold font-mono tabular-nums"
+            style={{ color: winner === "b" ? 'var(--color-muted)' : 'var(--color-dim)' }}
           >
             {valueB.toLocaleString()}{suffix && ` ${suffix}`}
           </span>

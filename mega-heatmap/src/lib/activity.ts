@@ -20,6 +20,9 @@ const BLOCKSCOUT_API_BASE = 'https://megaeth.blockscout.com/api/v2';
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;
 const REQUEST_TIMEOUT_MS = 10000;
+const USDM_CONTRACT = '0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7';
+const USDM_DECIMALS = 18;
+const ACTIVE_GAS_LOOKBACK_S = 30 * 86400; // 30 days in seconds
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -46,6 +49,24 @@ interface BlockscoutTransaction {
 
 interface BlockscoutResponse {
   items: BlockscoutTransaction[];
+  next_page_params: {
+    block_number: number;
+    index: number;
+    items_count: number;
+  } | null;
+}
+
+interface BlockscoutTokenTransfer {
+  from: { hash: string };
+  to: { hash: string };
+  timestamp: string;
+  token: { address: string; decimals: string; symbol: string };
+  total: { value: string; decimals: string };
+  tx_hash: string;
+}
+
+interface BlockscoutTokenResponse {
+  items: BlockscoutTokenTransfer[];
   next_page_params: {
     block_number: number;
     index: number;
@@ -139,6 +160,58 @@ export async function fetchAllTransactions(
   return transactions;
 }
 
+// ─── USDM Token Transfer Fetching ────────────────────────────────────────────
+
+async function fetchAllTokenTransfers(
+  address: string,
+  tokenContract: string,
+  maxPages = 20
+): Promise<BlockscoutTokenTransfer[]> {
+  const transfers: BlockscoutTokenTransfer[] = [];
+  let nextPageParams: BlockscoutTokenResponse['next_page_params'] = null;
+  let pageCount = 0;
+
+  while (pageCount < maxPages) {
+    const url = new URL(`${BLOCKSCOUT_API_BASE}/addresses/${address}/token-transfers`);
+    url.searchParams.set('type', 'ERC-20');
+    url.searchParams.set('token', tokenContract);
+
+    if (nextPageParams) {
+      url.searchParams.set('block_number', nextPageParams.block_number.toString());
+      url.searchParams.set('index', nextPageParams.index.toString());
+      url.searchParams.set('items_count', nextPageParams.items_count.toString());
+    }
+
+    try {
+      const response = await fetchWithRetry(url.toString());
+      const data: BlockscoutTokenResponse = await response.json();
+
+      transfers.push(...data.items);
+      nextPageParams = data.next_page_params;
+      pageCount++;
+
+      if (!nextPageParams) break;
+
+      await new Promise(resolve => setTimeout(resolve, 200));
+    } catch (error) {
+      console.error(`Failed to fetch token transfer page ${pageCount + 1}:`, error);
+      break;
+    }
+  }
+
+  return transfers;
+}
+
+function calculateUsdmVolume(transfers: BlockscoutTokenTransfer[]): number {
+  let totalRaw = 0n;
+  for (const t of transfers) {
+    if (t.total?.value) {
+      totalRaw += BigInt(t.total.value);
+    }
+  }
+  return Number(totalRaw) / 10 ** USDM_DECIMALS;
+}
+
 // ─── Metrics Calculation ─────────────────────────────────────────────────────
 
 export function calculateMetrics(
@@ -150,6 +223,9 @@ export function calculateMetrics(
       address,
       totalTxs: 0,
       gasSpentEth: 0,
+      activeGasEth: 0,
+      gasMilestoneTier: 0,
+      usdmTransacted: 0, // filled in by aggregateUserActivity
       contractsDeployed: 0,
       daysActive: 0,
       firstTxTimestamp: Math.floor(Date.now() / 1000),
@@ -161,17 +237,26 @@ export function calculateMetrics(
   const totalTxs = transactions.length;
 
   // Total gas spent (sum of all tx fees)
+  const nowSec = Date.now() / 1000;
+  const activeGasThreshold = nowSec - ACTIVE_GAS_LOOKBACK_S;
   let totalGasWei = 0n;
+  let activeGasWei = 0n;
   for (const tx of transactions) {
     if (tx.fee?.value) {
-      totalGasWei += BigInt(tx.fee.value);
+      const feeWei = BigInt(tx.fee.value);
+      totalGasWei += feeWei;
+      if (new Date(tx.timestamp).getTime() / 1000 >= activeGasThreshold) {
+        activeGasWei += feeWei;
+      }
     }
   }
   const gasSpentEth = Number(totalGasWei) / 1e18;
+  const activeGasEth = Number(activeGasWei) / 1e18;
+  const gasMilestoneTier = Math.floor(gasSpentEth);
 
   // Contract deployments (to === null)
   const contractsDeployed = transactions.filter(
-    tx => tx.from.hash.toLowerCase() === address.toLowerCase() && 
+    tx => tx.from.hash.toLowerCase() === address.toLowerCase() &&
           tx.to === null
   ).length;
 
@@ -192,6 +277,9 @@ export function calculateMetrics(
     address,
     totalTxs,
     gasSpentEth,
+    activeGasEth,
+    gasMilestoneTier,
+    usdmTransacted: 0, // filled in by aggregateUserActivity
     contractsDeployed,
     daysActive,
     firstTxTimestamp,
@@ -210,6 +298,9 @@ export function metricsToDbRecord(
     totalTxs: metrics.totalTxs,
     gasSpentWei: (BigInt(Math.floor(metrics.gasSpentEth * 1e18))).toString(),
     gasSpentEth: metrics.gasSpentEth,
+    activeGasEth: metrics.activeGasEth,
+    gasMilestoneTier: metrics.gasMilestoneTier,
+    usdmTransacted: metrics.usdmTransacted,
     contractsDeployed: metrics.contractsDeployed,
     daysActive: metrics.daysActive,
     firstTxTimestamp: metrics.firstTxTimestamp,
@@ -233,15 +324,27 @@ export async function aggregateUserActivity(
 ): Promise<AggregationResult> {
   console.log(`Aggregating activity for ${address}...`);
 
-  // Fetch all transactions
-  const transactions = await fetchAllTransactions(address);
-  console.log(`  Found ${transactions.length} transactions`);
+  // Fetch transactions and USDM transfers in parallel
+  const [transactions, usdmTransfers] = await Promise.all([
+    fetchAllTransactions(address),
+    fetchAllTokenTransfers(address, USDM_CONTRACT).catch(err => {
+      console.warn(`  USDM transfer fetch failed (non-fatal): ${err}`);
+      return [] as BlockscoutTokenTransfer[];
+    }),
+  ]);
+  console.log(`  Found ${transactions.length} txs, ${usdmTransfers.length} USDM transfers`);
 
-  // Calculate metrics
-  const metrics = calculateMetrics(address, transactions);
+  // Calculate base metrics from transactions + merge USDM volume
+  const baseMetrics = calculateMetrics(address, transactions);
+  const usdmTransacted = calculateUsdmVolume(usdmTransfers);
+  const metrics: UserMetrics = { ...baseMetrics, usdmTransacted };
+
   console.log(`  Metrics:`, {
     txs: metrics.totalTxs,
     gas: metrics.gasSpentEth.toFixed(4),
+    activeGas: metrics.activeGasEth.toFixed(6),
+    gasTier: metrics.gasMilestoneTier,
+    usdm: metrics.usdmTransacted.toFixed(2),
     deployments: metrics.contractsDeployed,
     days: metrics.daysActive,
   });
