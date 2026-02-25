@@ -586,6 +586,7 @@ export interface ProfileData {
   primaryAddress: string;
   displayName: string | null;
   twitter: string | null;
+  avatarUrl: string | null;
   createdAt: number;
 }
 
@@ -640,6 +641,8 @@ export function useProfileModal(): ProfileModalState {
     setProfileId(id);
     // Re-fetch to populate profileData with display name/twitter
     if (address) fetchProfile(address);
+    // Notify other components (e.g. ProfileAvatar in header) to refresh
+    window.dispatchEvent(new Event('profile-updated'));
   }, [address, fetchProfile]);
 
   const refreshProfile = useCallback(() => {

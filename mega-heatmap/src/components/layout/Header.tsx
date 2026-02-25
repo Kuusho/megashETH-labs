@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Flame, LayoutDashboard, Trophy, Rocket } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
-import { useAccount } from "wagmi";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
+import { ProfilePanel } from "@/components/profile/ProfilePanel";
 
 const navigation = [
   { name: "Heatmap", href: "/heatmap", icon: Flame },
@@ -44,7 +44,6 @@ function NavLink({
         mobile ? "px-3 py-2.5 rounded-md text-sm w-full" : "px-3 py-1.5 rounded-md text-sm"
       )}
       style={{
-        // Text: active = accent, hovered = primary text, rest = clearly readable muted
         color: isActive
           ? "var(--color-accent)"
           : hovered
@@ -72,13 +71,9 @@ function NavLink({
         )}
       </AnimatePresence>
 
-      {/* Icon */}
       <Icon className="relative w-3.5 h-3.5 flex-shrink-0" />
-
-      {/* Label */}
       <span className="relative">{item.name}</span>
 
-      {/* Active underline */}
       {isActive && (
         <motion.div
           layoutId={mobile ? "activeNavMobile" : "activeNav"}
@@ -91,69 +86,123 @@ function NavLink({
   );
 }
 
-// ─── Identity Chip ────────────────────────────────────────────────────────────
+// ─── Profile Avatar (connected state) ─────────────────────────────────────────
 
-function IdentityChip() {
-  const { address, isConnected } = useAccount();
-  const [displayName, setDisplayName] = useState<string | null>(null);
-  const [twitter, setTwitter] = useState<string | null>(null);
+interface ProfileInfo {
+  displayName: string | null;
+  twitter: string | null;
+  avatarUrl: string | null;
+}
+
+function ProfileAvatar({ address, onOpenPanel }: { address: string; onOpenPanel: () => void }) {
+  const [profile, setProfile] = useState<ProfileInfo | null>(null);
+  const [hovered, setHovered] = useState(false);
   const checkedRef = useRef<string | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!isConnected || !address) {
-      setDisplayName(null);
-      setTwitter(null);
-      checkedRef.current = null;
-      return;
-    }
-    if (checkedRef.current === address.toLowerCase()) return;
-    checkedRef.current = address.toLowerCase();
+  const showCard = () => {
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    setHovered(true);
+  };
+  const hideCard = () => {
+    hideTimer.current = setTimeout(() => setHovered(false), 120);
+  };
 
-    fetch(`/api/profile?address=${address}`)
+  useEffect(() => () => { if (hideTimer.current) clearTimeout(hideTimer.current); }, []);
+
+  const fetchProfile = useCallback((addr: string) => {
+    fetch(`/api/profile?address=${addr}`)
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
-        if (data?.profile) {
-          setDisplayName(data.profile.displayName ?? null);
-          setTwitter(data.profile.twitter ?? null);
-        }
+        if (data?.profile) setProfile({ displayName: data.profile.displayName, twitter: data.profile.twitter, avatarUrl: data.profile.avatarUrl ?? null });
+        else setProfile(null);
       })
       .catch(() => {});
-  }, [address, isConnected]);
+  }, []);
 
-  if (!isConnected || !displayName) return null;
+  useEffect(() => {
+    if (checkedRef.current === address.toLowerCase()) return;
+    checkedRef.current = address.toLowerCase();
+    fetchProfile(address);
+  }, [address, fetchProfile]);
 
-  const label = displayName;
-  const sub = twitter
-    ? (twitter.startsWith('@') ? twitter : `@${twitter}`)
+  // Refresh when profile is created or updated
+  useEffect(() => {
+    const handler = () => {
+      checkedRef.current = null;
+      fetchProfile(address);
+    };
+    window.addEventListener('profile-updated', handler);
+    return () => window.removeEventListener('profile-updated', handler);
+  }, [address, fetchProfile]);
+
+  const initial = profile?.displayName?.slice(0, 1).toUpperCase() ?? address.slice(2, 3).toUpperCase();
+  const twitterLabel = profile?.twitter
+    ? profile.twitter.startsWith('@') ? profile.twitter : `@${profile.twitter}`
     : null;
+  const truncAddr = `${address.slice(0, 6)}...${address.slice(-4)}`;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.92 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-md"
-      style={{
-        backgroundColor: 'rgba(132, 226, 150, 0.06)',
-        border: '1px solid rgba(132, 226, 150, 0.18)',
-      }}
-    >
-      <div
-        className="w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
-        style={{ backgroundColor: 'rgba(132,226,150,0.2)', color: 'var(--color-accent)' }}
+    <div className="relative" onMouseEnter={showCard} onMouseLeave={hideCard}>
+      {/* Avatar button */}
+      <button
+        onClick={onOpenPanel}
+        aria-label="Open profile"
+        className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold font-mono overflow-hidden transition-all duration-150"
+        style={{
+          backgroundColor: hovered ? 'rgba(132,226,150,0.2)' : 'rgba(132, 226, 150, 0.12)',
+          border: `1.5px solid ${hovered ? 'rgba(132,226,150,0.5)' : 'rgba(132, 226, 150, 0.3)'}`,
+          color: 'var(--color-accent)',
+        }}
       >
-        {label.slice(0, 1).toUpperCase()}
-      </div>
-      <div className="leading-none">
-        <div className="text-xs font-semibold" style={{ color: 'var(--color-text)' }}>
-          {label}
-        </div>
-        {sub && (
-          <div className="text-[10px] mt-0.5" style={{ color: 'var(--color-dim)' }}>
-            {sub}
-          </div>
+        {profile?.avatarUrl ? (
+          <img src={profile.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+        ) : (
+          initial
         )}
-      </div>
-    </motion.div>
+      </button>
+
+      {/* Hover preview card — interactive so mouse can move into it */}
+      <AnimatePresence>
+        {hovered && (
+          <motion.div
+            initial={{ opacity: 0, y: 6, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 6, scale: 0.96 }}
+            transition={{ duration: 0.12 }}
+            onMouseEnter={showCard}
+            onMouseLeave={hideCard}
+            className="absolute right-0 top-full mt-1.5 w-56 rounded-lg p-3.5 z-50"
+            style={{
+              backgroundColor: 'var(--color-surface)',
+              border: '1px solid rgba(132, 226, 150, 0.18)',
+              boxShadow: '0 8px 28px rgba(0,0,0,0.45)',
+            }}
+          >
+            {profile?.displayName && (
+              <div className="text-sm font-semibold mb-0.5" style={{ color: 'var(--color-text)' }}>
+                {profile.displayName}
+              </div>
+            )}
+            {twitterLabel && (
+              <div className="text-xs mb-1.5" style={{ color: 'var(--color-dim)' }}>
+                {twitterLabel}
+              </div>
+            )}
+            <div className="font-mono text-xs" style={{ color: 'var(--color-muted)' }}>
+              {truncAddr}
+            </div>
+            <button
+              onClick={onOpenPanel}
+              className="mt-2.5 pt-2.5 text-xs border-t w-full text-left transition-opacity hover:opacity-70"
+              style={{ color: 'var(--color-accent)', borderColor: 'rgba(132,226,150,0.12)' }}
+            >
+              View profile →
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -162,6 +211,7 @@ function IdentityChip() {
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full">
@@ -218,17 +268,45 @@ export function Header() {
             })}
           </div>
 
-          {/* Right side */}
+          {/* Right side — wallet / profile */}
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <IdentityChip />
-            <div className="hidden sm:block">
-              <ConnectButton
-                chainStatus="icon"
-                showBalance={false}
-                accountStatus={{ smallScreen: "avatar", largeScreen: "full" }}
-              />
-            </div>
+
+            <ConnectButton.Custom>
+              {({ account, openConnectModal, mounted }) => {
+                if (!mounted) return null;
+
+                // Not connected → styled connect button
+                if (!account) {
+                  return (
+                    <button
+                      onClick={openConnectModal}
+                      className="hidden sm:flex items-center px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150"
+                      style={{
+                        backgroundColor: 'rgba(132,226,150,0.1)',
+                        border: '1px solid rgba(132,226,150,0.25)',
+                        color: 'var(--color-accent)',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(132,226,150,0.18)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'rgba(132,226,150,0.1)';
+                      }}
+                    >
+                      Connect Wallet
+                    </button>
+                  );
+                }
+
+                // Connected → profile avatar only
+                return (
+                  <div className="hidden sm:block">
+                    <ProfileAvatar address={account.address} onOpenPanel={() => setPanelOpen(true)} />
+                  </div>
+                );
+              }}
+            </ConnectButton.Custom>
 
             {/* Mobile menu toggle */}
             <button
@@ -297,6 +375,9 @@ export function Header() {
           )}
         </AnimatePresence>
       </nav>
+
+      {/* Profile panel — fixed overlay, renders here but visually full-screen */}
+      <ProfilePanel open={panelOpen} onClose={() => setPanelOpen(false)} />
     </header>
   );
 }

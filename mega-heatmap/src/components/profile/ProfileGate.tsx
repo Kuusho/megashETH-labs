@@ -1,19 +1,17 @@
 'use client';
 
 import { useEffect } from 'react';
-import { usePathname } from 'next/navigation';
 import { ProfileSetupModal, useProfileModal } from './ProfileSetupModal';
 
 /**
  * ProfileGate — sits inside Providers, above every page.
- * Triggers the mandatory sign-up modal on any page except "/" whenever
- * a wallet is connected but has no associated profile.
+ * Triggers the mandatory sign-up modal immediately when a wallet is
+ * connected but has no associated profile.
  *
  * Also listens for the "open-add-wallet-modal" custom event so any component
  * can trigger the add-wallet flow without prop-drilling.
  */
 export function ProfileGate() {
-  const pathname = usePathname();
   const profileModal = useProfileModal();
 
   // Listen for the add-wallet trigger from any child component
@@ -22,9 +20,6 @@ export function ProfileGate() {
     window.addEventListener('open-add-wallet-modal', handler);
     return () => window.removeEventListener('open-add-wallet-modal', handler);
   }, [profileModal]);
-
-  // Don't block the landing page
-  if (pathname === '/') return null;
 
   return (
     <ProfileSetupModal

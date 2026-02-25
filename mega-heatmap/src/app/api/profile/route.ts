@@ -93,6 +93,7 @@ export async function GET(request: NextRequest) {
       primaryAddress: profile.primaryAddress,
       displayName: profile.displayName,
       twitter: profile.twitter,
+      avatarUrl: profile.avatarUrl,
       createdAt: profile.createdAt,
     },
     wallets: allWallets.map(w => ({
@@ -115,6 +116,7 @@ export async function POST(request: NextRequest) {
     message: string;
     displayName?: string;
     twitter?: string;
+    avatarUrl?: string;
   };
 
   try {
@@ -123,7 +125,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { profileId, address, signature, message, displayName, twitter } = body;
+  const { profileId, address, signature, message, displayName, twitter, avatarUrl } = body;
 
   if (!profileId || !address || !signature || !message) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -177,6 +179,7 @@ export async function POST(request: NextRequest) {
     primaryAddress: normalizedAddress,
     displayName: displayName.trim(),
     twitter: twitter?.trim() || null,
+    avatarUrl: avatarUrl?.trim() || null,
     createdAt: now,
   });
 
@@ -195,6 +198,7 @@ export async function POST(request: NextRequest) {
       primaryAddress: normalizedAddress,
       displayName: displayName.trim(),
       twitter: twitter?.trim() || null,
+      avatarUrl: avatarUrl?.trim() || null,
       createdAt: now,
     },
     wallets: [{ address: normalizedAddress, isPrimary: true, addedAt: now, score: 0 }],
@@ -209,6 +213,7 @@ export async function PATCH(request: NextRequest) {
     address: string;
     displayName?: string;
     twitter?: string;
+    avatarUrl?: string | null;
   };
 
   try {
@@ -217,7 +222,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 });
   }
 
-  const { address, displayName, twitter } = body;
+  const { address, displayName, twitter, avatarUrl } = body;
 
   if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
     return NextResponse.json({ error: 'Invalid address' }, { status: 400 });
@@ -242,9 +247,10 @@ export async function PATCH(request: NextRequest) {
   const profileId = walletRows[0].profileId;
 
   // Build update payload — only update fields that were passed
-  const updates: { displayName?: string; twitter?: string | null } = {};
+  const updates: { displayName?: string; twitter?: string | null; avatarUrl?: string | null } = {};
   if (displayName !== undefined) updates.displayName = displayName.trim();
   if (twitter !== undefined) updates.twitter = twitter.trim() || null;
+  if (avatarUrl !== undefined) updates.avatarUrl = avatarUrl?.trim() || null;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Nothing to update' }, { status: 400 });
@@ -266,6 +272,7 @@ export async function PATCH(request: NextRequest) {
       primaryAddress: updated[0].primaryAddress,
       displayName: updated[0].displayName,
       twitter: updated[0].twitter,
+      avatarUrl: updated[0].avatarUrl,
       createdAt: updated[0].createdAt,
     },
   });

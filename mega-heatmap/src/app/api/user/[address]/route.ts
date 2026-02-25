@@ -116,9 +116,13 @@ export async function GET(
               percentile,
             },
             multipliers: {
-              og_bonus: user.firstTxTimestamp ? user.firstTxTimestamp <= 1739059200 : false,
-              builder_bonus: user.contractsDeployed > 0,
-              power_user_bonus: false, // Can't calculate without days since first
+              ogBonus: user.firstTxTimestamp ? user.firstTxTimestamp <= 1739059200 : false,
+              builderBonus: user.contractsDeployed > 0,
+              powerUserBonus: false,
+              megaDomainBonus: false,
+              farcasterBonus: false,
+              protardioBonus: false,
+              nativeNftBonus: false,
             },
             last_updated: new Date(user.lastUpdated * 1000).toISOString(),
             warning: 'Data may be stale. Refresh failed.',

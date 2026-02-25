@@ -1,8 +1,7 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig, http } from "wagmi";
-import { mainnet, base, arbitrum, optimism } from "wagmi/chains";
+import { WagmiProvider, http } from "wagmi";
 import { type ReactNode, useState, useEffect } from "react";
 import { RainbowKitProvider, getDefaultConfig } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
@@ -10,7 +9,9 @@ import { LeaderboardProvider } from "@/lib/leaderboard";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { ProfileGate } from "@/components/profile/ProfileGate";
 
-// MegaETH chain configuration (testnet for now)
+// MegaETH mainnet chain configuration
+const MEGAETH_RPC = process.env.NEXT_PUBLIC_MEGAETH_RPC_URL || "https://rpc-megaeth-mainnet.globalstake.io";
+
 const megaeth = {
   id: 6342,
   name: "MegaETH",
@@ -21,7 +22,7 @@ const megaeth = {
   },
   rpcUrls: {
     default: {
-      http: [process.env.NEXT_PUBLIC_MEGAETH_RPC_URL || "https://rpc.megaeth.com"],
+      http: [MEGAETH_RPC],
     },
   },
   blockExplorers: {
@@ -30,20 +31,15 @@ const megaeth = {
       url: "https://explorer.megaeth.com",
     },
   },
-  testnet: true,
 } as const;
 
 // Wagmi + RainbowKit config
 const config = getDefaultConfig({
   appName: "megaSHETH Labs",
   projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "demo",
-  chains: [megaeth, mainnet, base, arbitrum, optimism],
+  chains: [megaeth],
   transports: {
-    [megaeth.id]: http(),
-    [mainnet.id]: http(),
-    [base.id]: http(),
-    [arbitrum.id]: http(),
-    [optimism.id]: http(),
+    [megaeth.id]: http(MEGAETH_RPC),
   },
   ssr: true,
 });
@@ -79,6 +75,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <QueryClientProvider client={queryClient}>
           <RainbowKitProvider
             modalSize="compact"
+            initialChain={megaeth.id}
             appInfo={{
               appName: "Bunny Intel",
               learnMoreUrl: "https://megaeth.com",

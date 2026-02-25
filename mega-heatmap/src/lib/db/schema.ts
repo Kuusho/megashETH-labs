@@ -115,6 +115,7 @@ export const userProfiles = pgTable('user_profiles', {
   primaryAddress: text('primary_address').notNull(),
   displayName: text('display_name'),
   twitter: text('twitter'),                      // Optional, stored as-is
+  avatarUrl: text('avatar_url'),                 // Optional: base64 data URL or external URL
   createdAt: integer('created_at').notNull(),    // Unix epoch seconds
 });
 
