@@ -9,6 +9,19 @@ import { openAddWalletModal } from './ProfileGate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+interface ScoreBreakdown {
+  base_points: number;
+  from_txs: number;
+  from_gas: number;
+  from_deployments: number;
+  from_days_active: number;
+  from_age: number;
+  multiplier_value: number;
+  protardio_stack: number;
+  native_nft_stack: number;
+  agent_bonus: boolean;
+}
+
 interface UserData {
   address: string;
   metrics: {
@@ -16,20 +29,34 @@ interface UserData {
     gas_spent_eth: number;
     contracts_deployed: number;
     days_active: number;
-    first_tx_date: string;
+    first_tx_date: string | null;
     avg_tx_per_day: number;
   };
   score: {
     megaeth_native_score: number;
+    base_score: number;
     rank: number | null;
     total_users: number;
     percentile: number;
   };
   multipliers: {
-    og_bonus: boolean;
-    builder_bonus: boolean;
-    power_user_bonus: boolean;
+    ogBonus: boolean;
+    builderBonus: boolean;
+    powerUserBonus: boolean;
+    megaDomainBonus: boolean;
+    farcasterBonus: boolean;
+    agentBonus: boolean;
+    protardioBonus: boolean;
+    protardioCount: number;
+    protardioAllUnlisted: boolean;
+    nativeNftBonus: boolean;
+    nativeNftCount: number;
   };
+  identity: {
+    mega_domain: boolean;
+    farcaster: boolean;
+  };
+  score_breakdown: ScoreBreakdown | null;
   last_updated: string;
   warning?: string;
 }
@@ -53,10 +80,73 @@ interface UserProfileData {
   combinedScore: number;
 }
 
+// ─── Score Breakdown Panel ────────────────────────────────────────────────────
+
+function ScoreBreakdownPanel({ bd }: { bd: ScoreBreakdown }) {
+  const items = [
+    { label: 'Transactions', value: bd.from_txs },
+    { label: 'Gas spent', value: bd.from_gas },
+    { label: 'Contracts', value: bd.from_deployments },
+    { label: 'Active days', value: bd.from_days_active },
+    { label: 'Account age', value: bd.from_age },
+  ];
+  const maxVal = Math.max(...items.map(i => i.value), 1);
+
+  return (
+    <div>
+      <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-dim)' }}>
+        Points Breakdown
+      </h3>
+      <div
+        className="p-4 rounded-lg space-y-2.5"
+        style={{ backgroundColor: 'rgba(174,164,191,0.04)', border: '1px solid rgba(174,164,191,0.08)' }}
+      >
+        {items.map(({ label, value }) => (
+          <div key={label} className="flex items-center gap-3">
+            <div className="w-24 text-xs shrink-0" style={{ color: 'var(--color-dim)' }}>{label}</div>
+            <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(174,164,191,0.1)' }}>
+              <motion.div
+                className="h-full rounded-full"
+                style={{ backgroundColor: 'var(--color-accent)', opacity: 0.75 }}
+                initial={{ width: 0 }}
+                animate={{ width: `${(value / maxVal) * 100}%` }}
+                transition={{ duration: 0.6, ease: 'easeOut' }}
+              />
+            </div>
+            <div className="w-16 text-right font-mono text-xs shrink-0" style={{ color: 'var(--color-muted)' }}>
+              +{Math.floor(value).toLocaleString()}
+            </div>
+          </div>
+        ))}
+        <div
+          className="flex items-center justify-between pt-2 mt-1 border-t"
+          style={{ borderColor: 'rgba(174,164,191,0.1)' }}
+        >
+          <span className="text-xs" style={{ color: 'var(--color-dim)' }}>
+            Base: {Math.floor(bd.base_points).toLocaleString()} pts
+          </span>
+          <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
+            ×{bd.multiplier_value.toFixed(2)}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export function UserProfile() {
-  const { address, isConnected } = useAccount();
+export function UserProfile({ address: externalAddress }: { address?: string } = {}) {
+  const { address: connectedAddress, isConnected } = useAccount();
+
+  // Target address: externally provided (lookup mode) or connected wallet
+  const targetAddress = externalAddress || connectedAddress;
+
+  // isOwnWallet: show edit/wallet-linking UI only for own address
+  const isOwnWallet =
+    !externalAddress ||
+    externalAddress.toLowerCase() === (connectedAddress?.toLowerCase() ?? '');
+
   const [data, setData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,14 +160,11 @@ export function UserProfile() {
   const [saveError, setSaveError] = useState<string | null>(null);
 
   const fetchUserData = useCallback(async () => {
-    if (!address) return;
+    if (!targetAddress) return;
     setLoading(true);
     setError(null);
     try {
-      const [activityRes, profileRes] = await Promise.all([
-        fetch(`/api/user/${address}`),
-        fetch(`/api/profile?address=${address}`),
-      ]);
+      const activityRes = await fetch(`/api/user/${targetAddress}`);
 
       if (!activityRes.ok) {
         if (activityRes.status === 404) {
@@ -89,10 +176,14 @@ export function UserProfile() {
       }
       setData(await activityRes.json());
 
-      if (profileRes.ok) {
-        setProfileData(await profileRes.json());
-      } else {
-        setProfileData(null);
+      // Only fetch profile for own wallet
+      if (isOwnWallet && connectedAddress) {
+        const profileRes = await fetch(`/api/profile?address=${connectedAddress}`);
+        if (profileRes.ok) {
+          setProfileData(await profileRes.json());
+        } else {
+          setProfileData(null);
+        }
       }
     } catch (err) {
       console.error('Failed to fetch user data:', err);
@@ -100,12 +191,17 @@ export function UserProfile() {
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [targetAddress, isOwnWallet, connectedAddress]);
 
   useEffect(() => {
-    if (isConnected && address) fetchUserData();
-    else { setData(null); setError(null); setProfileData(null); }
-  }, [address, isConnected, fetchUserData]);
+    if (targetAddress) {
+      fetchUserData();
+    } else {
+      setData(null);
+      setError(null);
+      setProfileData(null);
+    }
+  }, [targetAddress, fetchUserData]);
 
   const startEdit = () => {
     setEditName(profileData?.profile.displayName ?? '');
@@ -120,7 +216,7 @@ export function UserProfile() {
   };
 
   const saveEdit = async () => {
-    if (!address || !editName.trim()) {
+    if (!connectedAddress || !editName.trim()) {
       setSaveError('Display name is required');
       return;
     }
@@ -130,7 +226,7 @@ export function UserProfile() {
       const res = await fetch('/api/profile', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ address, displayName: editName.trim(), twitter: editTwitter.trim() || '' }),
+        body: JSON.stringify({ address: connectedAddress, displayName: editName.trim(), twitter: editTwitter.trim() || '' }),
       });
       if (!res.ok) {
         const d = await res.json();
@@ -146,9 +242,9 @@ export function UserProfile() {
     }
   };
 
-  // ─── Guard states ──────────────────────────────────────────────────────────
+  // ─── Guard states ────────────────────────────────────────────────────────────
 
-  if (!isConnected) {
+  if (!targetAddress) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 16 }}
@@ -167,7 +263,7 @@ export function UserProfile() {
       <div className="card p-8">
         <div className="flex items-center justify-center gap-3">
           <RefreshCw className="w-4 h-4 animate-spin" style={{ color: 'var(--color-accent)' }} />
-          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading your activity...</p>
+          <p className="text-sm" style={{ color: 'var(--color-muted)' }}>Loading activity...</p>
         </div>
       </div>
     );
@@ -195,12 +291,21 @@ export function UserProfile() {
     { label: 'Transactions', value: data.metrics.total_txs.toLocaleString(), icon: Zap },
     { label: 'Gas Spent', value: `${data.metrics.gas_spent_eth.toFixed(4)} ETH`, icon: Flame },
     { label: 'Contracts Deployed', value: data.metrics.contracts_deployed, icon: Award },
-    { label: 'Days Active', value: `${data.metrics.days_active} / 14`, icon: Calendar },
+    { label: 'Active Days', value: `${data.metrics.days_active}`, icon: Calendar },
   ];
 
-  const displayScore = profileData && profileData.wallets.length > 1
-    ? profileData.combinedScore
-    : data.score.megaeth_native_score;
+  const displayScore =
+    isOwnWallet && profileData && profileData.wallets.length > 1
+      ? profileData.combinedScore
+      : data.score.megaeth_native_score;
+
+  // Dynamic multiplier labels (reflect actual stacking)
+  const protardioLabel = data.score_breakdown
+    ? `${data.score_breakdown.protardio_stack.toFixed(2)}x`
+    : '1.30x';
+  const nativeNftLabel = data.score_breakdown
+    ? `${(1 + data.score_breakdown.native_nft_stack).toFixed(2)}x`
+    : '1.20x';
 
   return (
     <motion.div
@@ -215,8 +320,7 @@ export function UserProfile() {
         style={{ borderColor: 'rgba(174, 164, 191, 0.12)' }}
       >
         <div className="flex items-center gap-3 min-w-0">
-          {/* Identity block */}
-          {profileData ? (
+          {isOwnWallet && profileData ? (
             editing ? (
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <input
@@ -266,14 +370,16 @@ export function UserProfile() {
                     </span>
                   ) : (
                     <span className="text-xs font-mono" style={{ color: 'var(--color-dim)' }}>
-                      {address?.slice(0, 8)}...{address?.slice(-6)}
+                      {connectedAddress?.slice(0, 8)}...{connectedAddress?.slice(-6)}
                     </span>
                   )}
                 </div>
               </div>
             )
           ) : (
-            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>Your MegaETH Activity</h2>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--color-text)' }}>
+              {isOwnWallet ? 'Your MegaETH Activity' : `${targetAddress.slice(0, 8)}...${targetAddress.slice(-6)}`}
+            </h2>
           )}
         </div>
 
@@ -314,7 +420,7 @@ export function UserProfile() {
             {displayScore.toLocaleString()}
           </div>
           <div className="text-xs uppercase tracking-wider mb-4" style={{ color: 'var(--color-dim)' }}>
-            {profileData && profileData.wallets.length > 1 ? 'Combined Score' : 'MegaETH Native Score'}
+            {isOwnWallet && profileData && profileData.wallets.length > 1 ? 'Combined Score' : 'MegaETH Native Score'}
           </div>
           {data.score.rank && (
             <div className="flex items-center justify-center gap-6 text-sm">
@@ -335,79 +441,110 @@ export function UserProfile() {
           )}
         </div>
 
+        {/* Points Breakdown */}
+        {data.score_breakdown && (
+          <ScoreBreakdownPanel bd={data.score_breakdown} />
+        )}
+
         {/* Multiplier badges */}
         <div>
           <h3 className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--color-dim)' }}>
-            Active Multipliers
+            Multipliers
           </h3>
           <div className="flex flex-wrap gap-2">
-            <MultiplierBadge active={data.multipliers.og_bonus} label="OG User" description="First tx before or on mainnet launch" multiplier="1.5x" emoji="★" />
-            <MultiplierBadge active={data.multipliers.builder_bonus} label="Builder" description="Deployed at least 1 contract" multiplier="1.2x" emoji="◈" />
-            <MultiplierBadge active={data.multipliers.power_user_bonus} label="Power User" description="Average >50 tx/day" multiplier="1.3x" emoji="⚡" />
+            {/* Activity */}
+            <MultiplierBadge active={data.multipliers.ogBonus} label="OG User" description="First tx before or on mainnet launch" multiplier="1.5x" emoji="★" />
+            <MultiplierBadge active={data.multipliers.builderBonus} label="Builder" description="Deployed at least 1 contract" multiplier="1.2x" emoji="◈" />
+            <MultiplierBadge active={data.multipliers.powerUserBonus} label="Power User" description="Average >50 tx/day" multiplier="1.3x" emoji="⚡" />
+            {/* Identity */}
+            <MultiplierBadge active={data.multipliers.megaDomainBonus} label=".mega Domain" description="Owns a .mega domain name" multiplier="1.5x" emoji="◎" />
+            <MultiplierBadge active={data.multipliers.farcasterBonus} label="Farcaster" description="Has linked Farcaster account" multiplier="1.1x" emoji="⬡" />
+            <MultiplierBadge active={data.multipliers.agentBonus} label="Agent" description="ERC-8004 registered agent or operator" multiplier="1.15x" emoji="⬟" />
+            {/* NFT */}
+            <MultiplierBadge
+              active={data.multipliers.protardioBonus}
+              label={data.multipliers.protardioBonus && data.multipliers.protardioCount > 1
+                ? `Protardio ×${data.multipliers.protardioCount}`
+                : 'Protardio'}
+              description={data.multipliers.protardioAllUnlisted
+                ? `Holds ${data.multipliers.protardioCount} Protardio (all unlisted — stacking active)`
+                : 'Holds Protardio NFT'}
+              multiplier={protardioLabel}
+              emoji="⬡"
+            />
+            <MultiplierBadge
+              active={data.multipliers.nativeNftBonus}
+              label="Native NFT"
+              description={`Holds ${data.multipliers.nativeNftCount} MegaETH native NFT collection${data.multipliers.nativeNftCount !== 1 ? 's' : ''}`}
+              multiplier={nativeNftLabel}
+              emoji="◆"
+            />
           </div>
         </div>
 
-        {/* Linked Wallets */}
-        <div>
-          <div className="flex items-center justify-between mb-3">
-            <h3
-              className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5"
-              style={{ color: 'var(--color-dim)' }}
-            >
-              <Link2 className="w-3 h-3" />
-              Linked Wallets
-            </h3>
-            <button
-              onClick={openAddWalletModal}
-              className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
-              style={{ color: 'var(--color-accent)', backgroundColor: 'rgba(132, 226, 150, 0.08)', border: '1px solid rgba(132, 226, 150, 0.2)' }}
-            >
-              <Plus className="w-3 h-3" />
-              Add wallet
-            </button>
-          </div>
-
-          {profileData && profileData.wallets.length > 0 ? (
-            <div className="space-y-2">
-              {profileData.wallets.map(w => (
-                <div
-                  key={w.address}
-                  className="flex items-center justify-between px-3 py-2 rounded-md"
-                  style={{ backgroundColor: 'rgba(174, 164, 191, 0.04)', border: '1px solid rgba(174, 164, 191, 0.08)' }}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
-                    <span className="font-mono text-xs truncate" style={{ color: 'var(--color-muted)' }}>
-                      {w.address.slice(0, 8)}...{w.address.slice(-6)}
-                    </span>
-                    {w.isPrimary && (
-                      <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(132,226,150,0.1)', color: 'var(--color-accent)' }}>
-                        primary
-                      </span>
-                    )}
-                  </div>
-                  <span className="font-mono text-xs shrink-0 ml-3" style={{ color: 'var(--color-dim)' }}>
-                    {w.score.toLocaleString()} pts
-                  </span>
-                </div>
-              ))}
-              {profileData.wallets.length > 1 && (
-                <div
-                  className="flex items-center justify-between px-3 py-2 rounded-md mt-1"
-                  style={{ backgroundColor: 'rgba(132, 226, 150, 0.06)', border: '1px solid rgba(132, 226, 150, 0.15)' }}
-                >
-                  <span className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>Combined score</span>
-                  <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
-                    {profileData.combinedScore.toLocaleString()} pts
-                  </span>
-                </div>
-              )}
+        {/* Linked Wallets — only for own wallet */}
+        {isOwnWallet && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h3
+                className="text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5"
+                style={{ color: 'var(--color-dim)' }}
+              >
+                <Link2 className="w-3 h-3" />
+                Linked Wallets
+              </h3>
+              <button
+                onClick={openAddWalletModal}
+                className="flex items-center gap-1 text-xs px-2 py-1 rounded-md transition-colors"
+                style={{ color: 'var(--color-accent)', backgroundColor: 'rgba(132, 226, 150, 0.08)', border: '1px solid rgba(132, 226, 150, 0.2)' }}
+              >
+                <Plus className="w-3 h-3" />
+                Add wallet
+              </button>
             </div>
-          ) : (
-            <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
-              No additional wallets linked.
-            </p>
-          )}
-        </div>
+
+            {profileData && profileData.wallets.length > 0 ? (
+              <div className="space-y-2">
+                {profileData.wallets.map(w => (
+                  <div
+                    key={w.address}
+                    className="flex items-center justify-between px-3 py-2 rounded-md"
+                    style={{ backgroundColor: 'rgba(174, 164, 191, 0.04)', border: '1px solid rgba(174, 164, 191, 0.08)' }}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono text-xs truncate" style={{ color: 'var(--color-muted)' }}>
+                        {w.address.slice(0, 8)}...{w.address.slice(-6)}
+                      </span>
+                      {w.isPrimary && (
+                        <span className="text-xs px-1.5 py-0.5 rounded shrink-0" style={{ backgroundColor: 'rgba(132,226,150,0.1)', color: 'var(--color-accent)' }}>
+                          primary
+                        </span>
+                      )}
+                    </div>
+                    <span className="font-mono text-xs shrink-0 ml-3" style={{ color: 'var(--color-dim)' }}>
+                      {w.score.toLocaleString()} pts
+                    </span>
+                  </div>
+                ))}
+                {profileData.wallets.length > 1 && (
+                  <div
+                    className="flex items-center justify-between px-3 py-2 rounded-md mt-1"
+                    style={{ backgroundColor: 'rgba(132, 226, 150, 0.06)', border: '1px solid rgba(132, 226, 150, 0.15)' }}
+                  >
+                    <span className="text-xs font-semibold" style={{ color: 'var(--color-accent)' }}>Combined score</span>
+                    <span className="font-mono text-xs font-bold" style={{ color: 'var(--color-accent)' }}>
+                      {profileData.combinedScore.toLocaleString()} pts
+                    </span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-xs" style={{ color: 'var(--color-dim)' }}>
+                No additional wallets linked.
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Footer */}

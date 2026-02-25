@@ -203,6 +203,18 @@ export async function GET(
         native_nft_count: externalData.nativeNftCount ?? 0,
         collections: externalData.nftHoldings?.length ?? 0,
       },
+      score_breakdown: {
+        base_points: breakdown.basePoints,
+        from_txs: breakdown.breakdown.fromTxs,
+        from_gas: breakdown.breakdown.fromGas,
+        from_deployments: breakdown.breakdown.fromDeployments,
+        from_days_active: breakdown.breakdown.fromDaysActive,
+        from_age: breakdown.breakdown.fromAge,
+        multiplier_value: breakdown.multiplierValue,
+        protardio_stack: breakdown.protardioStack,
+        native_nft_stack: breakdown.nativeNftStack,
+        agent_bonus: breakdown.agentBonus,
+      },
       last_updated: new Date(user.lastUpdated * 1000).toISOString(),
     });
 

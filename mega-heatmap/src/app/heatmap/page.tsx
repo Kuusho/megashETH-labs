@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAccount } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
@@ -57,6 +57,8 @@ export default function HeatmapPage() {
   // Comparison state
   const [compareUserA, setCompareUserA] = useState<{ address: string; user?: ResolvedUser } | null>(null);
   const [compareUserB, setCompareUserB] = useState<{ address: string; user?: ResolvedUser } | null>(null);
+  const [scoreA, setScoreA] = useState<number | null>(null);
+  const [scoreB, setScoreB] = useState<number | null>(null);
   const [shareState, setShareState] = useState<"idle" | "copied" | "image-copied">("idle");
 
   // Determine active address based on mode
@@ -120,6 +122,23 @@ export default function HeatmapPage() {
   const handleCompareB = useCallback((address: string, user?: ResolvedUser) => {
     setCompareUserB({ address, user });
   }, []);
+
+  // Fetch MegaETH points for comparison users
+  useEffect(() => {
+    if (!compareUserA?.address) { setScoreA(null); return; }
+    fetch(`/api/user/${compareUserA.address}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setScoreA(d?.score?.megaeth_native_score ?? null))
+      .catch(() => setScoreA(null));
+  }, [compareUserA?.address]);
+
+  useEffect(() => {
+    if (!compareUserB?.address) { setScoreB(null); return; }
+    fetch(`/api/user/${compareUserB.address}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setScoreB(d?.score?.megaeth_native_score ?? null))
+      .catch(() => setScoreB(null));
+  }, [compareUserB?.address]);
 
   // Build OG image URL for comparison
   const buildOgUrl = useCallback(() => {
@@ -406,15 +425,15 @@ export default function HeatmapPage() {
           <FrequentProjects address={connectedAddress} />
         )}
 
-        {/* User Profile & Points Section */}
-        {isConnected && (
+        {/* User Profile & Points Section — shown for connected wallet or lookup address */}
+        {activeAddress && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
             className="mb-8"
           >
-            <UserProfile />
+            <UserProfile address={activeAddress} />
           </motion.div>
         )}
 
@@ -482,6 +501,11 @@ export default function HeatmapPage() {
                       <p className="text-xs font-mono" style={{ color: '#878283' }}>
                         {compareUserA.address.slice(0, 6)}...{compareUserA.address.slice(-4)}
                       </p>
+                      {scoreA !== null && (
+                        <div className="mt-1 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(235,69,17,0.1)', color: '#eb4511' }}>
+                          {scoreA.toLocaleString()} pts
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: '#1a1617' }}>
@@ -515,6 +539,11 @@ export default function HeatmapPage() {
                       <p className="text-xs font-mono" style={{ color: '#878283' }}>
                         {compareUserB.address.slice(0, 6)}...{compareUserB.address.slice(-4)}
                       </p>
+                      {scoreB !== null && (
+                        <div className="mt-1 px-2 py-0.5 rounded text-xs font-mono font-bold inline-block" style={{ backgroundColor: 'rgba(176,46,12,0.12)', color: '#b02e0c' }}>
+                          {scoreB.toLocaleString()} pts
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="w-12 h-12 rounded-full flex items-center justify-center mb-2 mx-auto" style={{ backgroundColor: '#1a1617' }}>
@@ -567,6 +596,13 @@ export default function HeatmapPage() {
               {/* Comparison bars - only when both have data */}
               {compareDataA.size > 0 && compareDataB.size > 0 && (
                 <div className="space-y-6">
+                  {scoreA !== null && scoreB !== null && (
+                    <ComparisonMetric
+                      label="MegaETH Points"
+                      valueA={scoreA}
+                      valueB={scoreB}
+                    />
+                  )}
                   <ComparisonMetric
                     label="Total Transactions"
                     valueA={compareStatsA.totalTransactions}
