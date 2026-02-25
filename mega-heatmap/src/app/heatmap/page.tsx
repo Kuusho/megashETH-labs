@@ -144,11 +144,15 @@ export default function HeatmapPage() {
   const buildOgUrl = useCallback(() => {
     if (!compareUserA || !compareUserB) return null;
 
+    const ptA = scoreA ?? 0;
+    const ptB = scoreB ?? 0;
+
     const winsA = [
       compareStatsA.totalTransactions > compareStatsB.totalTransactions,
       compareStatsA.currentStreak > compareStatsB.currentStreak,
       compareStatsA.longestStreak > compareStatsB.longestStreak,
       compareStatsA.activeDays > compareStatsB.activeDays,
+      ptA > ptB,
     ].filter(Boolean).length;
 
     const winsB = [
@@ -156,6 +160,7 @@ export default function HeatmapPage() {
       compareStatsB.currentStreak > compareStatsA.currentStreak,
       compareStatsB.longestStreak > compareStatsA.longestStreak,
       compareStatsB.activeDays > compareStatsA.activeDays,
+      ptB > ptA,
     ].filter(Boolean).length;
 
     const params = new URLSearchParams({
@@ -167,9 +172,11 @@ export default function HeatmapPage() {
       streakB: compareStatsB.currentStreak.toString(),
       txA: compareStatsA.totalTransactions.toString(),
       txB: compareStatsB.totalTransactions.toString(),
+      ptA: ptA.toString(),
+      ptB: ptB.toString(),
     });
     return `/api/og?${params.toString()}`;
-  }, [compareUserA, compareUserB, compareStatsA, compareStatsB]);
+  }, [compareUserA, compareUserB, compareStatsA, compareStatsB, scoreA, scoreB]);
 
   // Copy URL to clipboard
   const handleShareUrl = async () => {
