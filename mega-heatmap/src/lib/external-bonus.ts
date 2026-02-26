@@ -9,19 +9,17 @@
  * - Agent/operator registration — on-chain via Blockscout contract query
  */
 
-import { resolveAddressToName } from './dotmega';
 import { lookupByAddress } from './neynar';
-import { NFT_COLLECTIONS } from './db/schema';
+import { NFT_COLLECTIONS, MEGA_NAMES_CONTRACT } from './db/schema';
 import type { ExternalBonusData } from './scoring';
 
-const MEGAETH_CHAIN_ID = 4326;
-const BLOCKSCOUT_API = 'https://megaeth.blockscout.com/api/v2';
+const BLOCKSCOUT_API = 'https://megaeth.blockscout.com/api/v2'; // MegaETH — native NFTs
 
 // ─── NFT Balance Check via Blockscout ────────────────────────────────────────
 
 interface BlockscoutNft {
   token: {
-    address: string;
+    address_hash: string;  // Blockscout returns address_hash, not address
     name: string;
     type: string;
   };
@@ -34,45 +32,83 @@ interface NftHoldingResult {
   nativeNftCount: number;       // count of distinct native collections held (excl. Protardio)
 }
 
+// Fetch MegaETH native NFT collections (does NOT include Protardio — that's on Base)
 async function fetchNftHoldings(address: string): Promise<NftHoldingResult> {
   const empty: NftHoldingResult = { contractAddresses: [], protardioCount: 0, nativeNftCount: 0 };
   try {
     const response = await fetch(
       `${BLOCKSCOUT_API}/addresses/${address.toLowerCase()}/nft?type=ERC-721`,
-      { next: { revalidate: 300 } } // cache for 5 min
+      { next: { revalidate: 300 } }
     );
 
     if (!response.ok) {
-      console.error('[ExternalBonus] Blockscout NFT fetch failed:', response.status);
+      console.error('[ExternalBonus] MegaETH NFT fetch failed:', response.status);
       return empty;
     }
 
     const data = await response.json();
     const items: BlockscoutNft[] = data.items || [];
 
-    // Count individual Protardio tokens (each ERC-721 item = 1 token)
-    const protardioAddr = NFT_COLLECTIONS.protardio.toLowerCase();
-    const protardioCount = items.filter(
-      item => item.token?.address?.toLowerCase() === protardioAddr
-    ).length;
-
-    // Unique contract addresses held
+    // Unique contract addresses held on MegaETH
     const contractAddresses = [
       ...new Set(
-        items.filter(item => item.token?.address).map(item => item.token.address.toLowerCase())
+        items
+          .filter(item => item.token?.address_hash)
+          .map(item => item.token.address_hash.toLowerCase())
       ),
     ];
 
-    // Distinct native collections held, excluding Protardio (counted separately above)
+    // Distinct native collections held (Protardio excluded — it lives on Base)
     const nativeAddrs = Object.values(NFT_COLLECTIONS)
       .map(a => a.toLowerCase())
-      .filter(a => a !== protardioAddr);
+      .filter(a => a !== NFT_COLLECTIONS.protardio.toLowerCase());
     const nativeNftCount = nativeAddrs.filter(a => contractAddresses.includes(a)).length;
 
-    return { contractAddresses, protardioCount, nativeNftCount };
+    return { contractAddresses, protardioCount: 0, nativeNftCount };
   } catch (error) {
-    console.error('[ExternalBonus] NFT fetch error:', error);
+    console.error('[ExternalBonus] MegaETH NFT fetch error:', error);
     return empty;
+  }
+}
+
+// Fetch Protardio count from Base via Alchemy NFT API
+// (Protardio is deployed on Base, not MegaETH)
+// Requires ALCHEMY_BASE_RPC_URL env var: https://base-mainnet.g.alchemy.com/v2/{key}
+async function fetchProtardioCount(address: string): Promise<number> {
+  const rpcUrl = process.env.ALCHEMY_BASE_RPC_URL;
+  if (!rpcUrl) {
+    console.warn('[ExternalBonus] ALCHEMY_BASE_RPC_URL not set, skipping Protardio check');
+    return 0;
+  }
+
+  // Extract API key from RPC URL: https://base-mainnet.g.alchemy.com/v2/{key}
+  const apiKey = rpcUrl.split('/').pop();
+  if (!apiKey) {
+    console.warn('[ExternalBonus] Could not parse Alchemy API key from ALCHEMY_BASE_RPC_URL');
+    return 0;
+  }
+
+  try {
+    const url = new URL(`https://base-mainnet.g.alchemy.com/nft/v3/${apiKey}/getNFTsForOwner`);
+    url.searchParams.set('owner', address.toLowerCase());
+    url.searchParams.append('contractAddresses[]', NFT_COLLECTIONS.protardio);
+    url.searchParams.set('withMetadata', 'false');
+
+    const response = await fetch(url.toString(), {
+      headers: { Accept: 'application/json' },
+      next: { revalidate: 300 },
+    });
+
+    if (!response.ok) {
+      console.warn('[ExternalBonus] Alchemy Protardio fetch failed:', response.status);
+      return 0;
+    }
+
+    const data = await response.json();
+    return (data.totalCount as number) ?? (data.ownedNfts?.length ?? 0);
+  } catch (error) {
+    console.warn('[ExternalBonus] Alchemy Protardio fetch error:', error);
+    return 0;
   }
 }
 
@@ -113,9 +149,9 @@ async function checkProtardioListingStatus(address: string): Promise<boolean> {
   try {
     const response = await fetch(
       `https://api.opensea.io/api/v2/orders/megaeth/seaport/listings` +
-        `?asset_contract_address=${NFT_COLLECTIONS.protardio}` +
-        `&maker=${address.toLowerCase()}` +
-        `&order_by=created_date&order_direction=desc&limit=1`,
+      `?asset_contract_address=${NFT_COLLECTIONS.protardio}` +
+      `&maker=${address.toLowerCase()}` +
+      `&order_by=created_date&order_direction=desc&limit=1`,
       { headers: { 'x-api-key': apiKey, Accept: 'application/json' } }
     );
 
@@ -184,21 +220,26 @@ export async function fetchExternalBonusData(address: string): Promise<ExternalB
   console.log('[ExternalBonus] Fetching data for:', address);
 
   // Parallel fetch all external data
-  const [megaDomain, farcasterUsers, nftResult, protardioUnlisted, isAgent] = await Promise.all([
-    resolveAddressToName(address),
+  // Note: .mega domain is detected on-chain via MegaNames NFT holdings — no dotmega API needed
+  // Note: Protardio is on Base; MegaETH native collections are fetched separately
+  const [farcasterUsers, nftResult, protardioCount, protardioUnlisted, isAgent] = await Promise.all([
     lookupByAddress(address),
-    fetchNftHoldings(address),           // on-chain via Blockscout
+    fetchNftHoldings(address),           // MegaETH native collections via Blockscout
+    fetchProtardioCount(address),         // Protardio on Base via Base Blockscout
     checkProtardioListingStatus(address), // OpenSea API — listing status only
     checkAgentRegistration(address),      // on-chain via Blockscout
   ]);
 
+  // Detect .mega domain ownership from on-chain NFT holdings (MegaNames ERC-721)
+  const hasMegaDomain = nftResult.contractAddresses.includes(MEGA_NAMES_CONTRACT.toLowerCase());
+
   const nftCheck = checkCollectionHoldings(nftResult);
 
   const result: ExternalBonusData = {
-    hasMegaDomain: !!megaDomain?.name,
+    hasMegaDomain,
     hasFarcaster: farcasterUsers.length > 0,
     isAgent,
-    protardioCount: nftResult.protardioCount,
+    protardioCount,  // from Base Blockscout
     protardioAllUnlisted: protardioUnlisted,
     holdsNativeNft: nftResult.nativeNftCount > 0,
     nativeNftCount: nftResult.nativeNftCount,
@@ -206,10 +247,10 @@ export async function fetchExternalBonusData(address: string): Promise<ExternalB
   };
 
   console.log('[ExternalBonus] Result:', {
-    megaDomain: megaDomain?.name || 'none',
+    megaDomain: hasMegaDomain,
     farcaster: farcasterUsers[0]?.username || 'none',
     collections: nftCheck.collectionsHeld.length,
-    protardioCount: nftResult.protardioCount,
+    protardioCount,
     protardioAllUnlisted: protardioUnlisted,
     isAgent,
   });
@@ -243,7 +284,7 @@ export async function fetchExternalBonusDataBulk(
   concurrency = 5
 ): Promise<Map<string, ExternalBonusData>> {
   const results = new Map<string, ExternalBonusData>();
-  
+
   // Process in batches to respect rate limits
   for (let i = 0; i < addresses.length; i += concurrency) {
     const batch = addresses.slice(i, i + concurrency);
@@ -253,7 +294,7 @@ export async function fetchExternalBonusDataBulk(
         return { addr, data };
       })
     );
-    
+
     for (const { addr, data } of batchResults) {
       results.set(addr.toLowerCase(), data);
     }

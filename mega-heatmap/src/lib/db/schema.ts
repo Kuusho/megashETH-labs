@@ -120,6 +120,9 @@ export const NFT_COLLECTIONS = {
   nacciCartel: '0x2e5902a40115bf36739949d9875be0bcd2384c05',
 } as const;
 
+// .mega domain NFT contract — used only for hasMegaDomain check, not native NFT scoring
+export const MEGA_NAMES_CONTRACT = '0x5b424c6ccba77b32b9625a6fd5a30d409d20d997';
+
 // ─── User Profiles Table ─────────────────────────────────────────────────────
 
 export const userProfiles = pgTable('user_profiles', {

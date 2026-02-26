@@ -679,3 +679,127 @@ Final Score: 782 × 2.73 = 2,134 points
 
 **Last Updated:** 2026-02-25 04:25 GMT+1
 **Current Status:** Identity + NFT multipliers shipped ✅, API enhanced ✅
+
+---
+
+## Session: Scoring System Overhaul
+
+**Date:** 2026-02-25
+**Model:** Claude / Gemini (design) + Claude (execution)
+**Goal:** Expand and rebalance the scoring engine — new base signals, multiplier rework, identity and NFT model redesign
+
+---
+
+### What Was Changed
+
+**1. `src/lib/scoring.ts` — MODIFIED**
+
+New constants added:
+```typescript
+POINTS_PER_ACTIVE_GAS = 3000       // 3 pts per 0.001 ETH active gas (last 30d)
+POINTS_PER_GAS_MILESTONE = 1500    // per full ETH of lifetime gas crossed
+USDM_POINTS_PER_USD = 0.1          // 0.1 pts per $1 USDM transacted
+USDM_POINTS_CAP = 5000             // hard cap at $50K volume
+```
+
+Multiplier changes:
+```typescript
+MULTIPLIER_MEGA_DOMAIN = 1.5       // was 1.15
+MULTIPLIER_PROTARDIO = 1.3         // was 1.2 (now base for ≥1 held)
+PROTARDIO_BONUS_PER_EXTRA = 0.03   // additive per extra held if none listed, cap 10
+MULTIPLIER_NATIVE_NFT_BASE = 1.2   // was 1.1 flat
+NATIVE_NFT_BONUS_PER_COLLECTION = 0.05  // additive per collection, cap 2
+NATIVE_NFT_MAX_COLLECTIONS = 2
+MULTIPLIER_AGENT = 1.15            // NEW — ERC-8004 registered agent or operator
+```
+
+`calculateBasePoints()` now includes:
+```
++ (activeGasEth / 0.001) * 3
++ gasMilestoneTier * 1500
++ min(usdmTransacted * 0.1, 5000)
+```
+
+`getMultiplierValue()` redesigned:
+- Protardio: `1.3×` base, then `+0.03` per extra held (up to 10 total), only if none listed
+- Native NFT: additive `1.2 + (nativeNftCount * 0.05)`, capped at 2 collections
+- Protardio and Native NFT **no longer mutually exclusive**
+- Agent bonus: `1.15×` for ERC-8004 registered wallet or operator
+
+`ScoreBreakdown` now exposes: `fromActiveGas`, `fromGasMilestone`, `fromUsdm`, `protardioStack`, `nativeNftStack`, `agentBonus`
+
+**2. `src/lib/activity.ts` — MODIFIED**
+
+New constants:
+```typescript
+USDM_CONTRACT = '0xFAfDdbb3FC7688494971a79cc65DCa3EF82079E7'
+ACTIVE_GAS_LOOKBACK_S = 30 * 86400  // 30-day window
+```
+
+New function: `fetchAllTokenTransfers(address, tokenContract)` — paginates Blockscout ERC-20 token transfers (same retry/pagination pattern as tx fetch)
+
+New function: `calculateUsdmVolume(transfers)` — sums all inbound + outbound USDM transfer values, converts from wei
+
+`calculateMetrics()` now computes in a single pass over transactions:
+- `gasSpentEth` (lifetime)
+- `activeGasEth` (last 30 days only)
+- `gasMilestoneTier` = `Math.floor(gasSpentEth)`
+
+`aggregateUserActivity()` now fetches transactions + USDM transfers in parallel, merges `usdmTransacted` into metrics before scoring
+
+`metricsToDbRecord()` persists: `activeGasEth`, `gasMilestoneTier`, `usdmTransacted`
+
+---
+
+### Multiplier Stack (Full — Current)
+
+```
+Final Score = Base × Activity × Identity × NFT
+
+Base signals:
+  txs × 0.5
+  gasSpentEth × 100               (lifetime)
+  activeGasEth × 3000             (last 30 days)
+  gasMilestoneTier × 1500         (per 1 ETH lifetime crossed, uncapped)
+  contractsDeployed × 50
+  daysActive × 10
+  accountAgeDays × 2
+  min(usdmTransacted × 0.1, 5000) (capped at $50K)
+
+Activity multipliers:
+  OG (1.5×)          — first tx ≤ mainnet launch
+  Builder (1.2×)     — deployed contracts
+  Power User (1.3×)  — avg >50 tx/day
+
+Identity multipliers:
+  .mega Domain (1.5×)   — owns a .mega name
+  Farcaster (1.1×)      — linked Farcaster account
+  ERC-8004 Agent (1.15×) — registered agent wallet or operator
+
+Protardio (separate tier, stacks with NFT):
+  Base (1.3×)         — holds ≥1 Protardio
+  +0.03 per extra     — up to 10 total, only if none listed (OpenSea API check)
+
+Native NFT (additive):
+  1.2 + 0.05 per collection — capped at 2 collections (max 1.30×)
+```
+
+Max theoretical multiplier: **~9.07×**
+
+---
+
+### Decisions Made
+
+| Decision | Rationale |
+|----------|-----------|
+| Active gas at 3,000 pts/ETH vs lifetime at 100 pts/ETH | Gas is cheap; higher rate rewards meaningful network usage |
+| Gas milestone uncapped | 20 ETH in gas = 30,000 bonus pts because they earned it |
+| USDM cap at $50K / 5,000 pts | Prevents arb-loop inflation while rewarding genuine DeFi users |
+| Protardio + Native NFT no longer exclusive | Different reward tiers, no reason to penalise dual holders |
+| OpenSea API strictly for Protardio listing check only | All ownership checks remain on-chain via Blockscout |
+| Agent bonus in Identity group | Comparable weight to .mega / Farcaster — signals ecosystem commitment |
+
+---
+
+**Last Updated:** 2026-02-25 20:00 GMT+1
+**Current Status:** Full scoring overhaul shipped ✅
